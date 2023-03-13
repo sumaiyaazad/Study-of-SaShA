@@ -87,11 +87,9 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', type=bool, default=False, help='verbose mode')
     parser.add_argument('--output_filename', type=str, default='recommendations.csv', help='output filename')
     parser.add_argument('--sep', type=str, default=',', help='separator for output file')
-    parser.add_argument('--save_simi', type=bool, default=True, help='save similarity matrix')
+    parser.add_argument('--save_simi', type=bool, default=False, help='save similarity matrix')
     parser.add_argument('--load_simi', type=bool, default=False, help='load similarity matrix')
-    # parser.add_argument('--save_simi_location', type=str, default='user_user_similarity.csv', help='location to save similarity matrix')
     parser.add_argument('--save_simi_location', type=str, default='user_user_similarity.pickle', help='location to save similarity matrix')
-    # parser.add_argument('--load_simi_location', type=str, default='user_user_similarity.csv', help='location to load similarity matrix from')
     parser.add_argument('--load_simi_location', type=str, default='user_user_similarity.pickle', help='location to load similarity matrix from')
     args = parser.parse_args()
 
