@@ -102,7 +102,7 @@ class ItemBasedCF:
 
         return self.user_user_similarity
 
-    def recommend(self, user, k=10, verbose=False):
+    def getRecommendations(self, user, k=10, verbose=False):
         if self.user_user_similarity is None:
             self.getUserSimilarity(verbose=verbose)
 
@@ -155,7 +155,7 @@ class ItemBasedCF:
 
 
     # generate the recommendation items for each user
-    def generateRecommendations(self, num_of_recommendations=10, verbose=False, output_file='item_based_CF_recommendations.dat'):
+    def getRecommendationsForAllUsers(self, num_of_recommendations=10, verbose=False, output_file='item_based_CF_recommendations.dat'):
 
         if self.user_user_similarity is None:
             self.getUserSimilarity(verbose=verbose)

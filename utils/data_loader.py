@@ -22,6 +22,18 @@ def load_data_ml_1M_items(file_name = 'data/ml-1m/movies.dat'):
 
     return data
 
+def load_data_ml_100k_ratings(file_name = 'data/ml-100k/u.data', sep='\t'):
+    # Load data
+    data = pd.read_csv(file_name, sep=sep, header=None, engine='python', encoding='latin-1')
+
+    # Rename columns
+    data.columns = ['user_id', 'item_id', 'rating', 'timestamp']
+
+    # Drop timestamp column
+    data = data.drop('timestamp', axis=1)
+
+    return data
+
 def load_data_ml_1M_users(file_name = 'data/ml-1m/users.dat'):
     # Load data
     data = pd.read_csv(file_name, sep='::', header=None, engine='python', encoding='latin-1')
