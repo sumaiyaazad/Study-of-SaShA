@@ -30,9 +30,10 @@ Collaborative filtering (CF) is a widely used technique for recommender systems.
 ### Generating Recommendations
 
 - Run the following command to generate recommendations.
+- see [generate_recommendations_ubcf.py](generate_recommendations_ubcf.py) for more details.
 
 ```bash
-    python generate_recommendations_ubcf.py --dataset <dataset_name> --n_users <n_users> --n_items <n_items> --n_neighbors <number of neighbours> --similarity_measure <similarity measure to use> --output_filename <output filename>
+    python generate_recommendations_ubcf.py
 
 ```
 
