@@ -63,9 +63,21 @@ def tanimoto_similarity(x, y):
 
 # adjusted cosine similarity
 def adjusted_cosine_similarity(x, y):
-    x, y = handleNan(x, y)
+    
+    if type(x) == dict:
+        x, y = get_common_ratings(x, y)
+    else:
+        x, y = handleNan(x, y)
+
+    if np.sum(x) == 0 or np.sum(y) == 0:
+        return 0
+    
     x = x - np.mean(x)
     y = y - np.mean(y)
+    
+    if np.sum(x) == 0 or np.sum(y) == 0:
+        return 0
+    
     return np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
 
 # -------------------------------- distance measures -------------------------------------
