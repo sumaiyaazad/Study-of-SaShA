@@ -1,5 +1,6 @@
 
 import pandas as pd
+import numpy as np
 
 def load_data_ml_1M_ratings(file_name = 'data/ml-1m/ratings.dat'):
     # Load data
@@ -54,3 +55,13 @@ def train_test_split(data, test_size=0.2, train_size=0.8, random_state=0, shuffl
     
 
     return train_data, test_data
+
+
+def convert_to_matrix(data):
+    """
+    Convert the data to a matrix
+    """
+    matrix = np.zeros((data["user_id"].max()+1, data["item_id"].max()+1))
+    for row in data.itertuples():
+        matrix[row[1], row[2]] = row[3]
+    return matrix
