@@ -79,6 +79,17 @@ class MatrixFactorizationCF:
         for x, y in zip(xs, ys):
             error += pow(self.data[x, y] - predicted[x, y], 2)
         return np.sqrt(error)
+    
+    def mae(self):
+        """
+        A function to compute the total mean absolute error
+        """
+        xs, ys = self.data.nonzero()
+        predicted = self.full_matrix()
+        error = 0
+        for x, y in zip(xs, ys):
+            error += abs(self.data[x, y] - predicted[x, y])
+        return error
 
     def sgd(self):
         """
@@ -173,3 +184,21 @@ class MatrixFactorizationCF:
         df = pd.DataFrame(self.data)
         # df.to_csv(path, index=True, header=True)
         df.to_csv(path, index=False, header=False)
+
+    def save_recommendations(self, path, n=10):
+        """
+        Save the recommendations to a file
+        """
+        with open(path, "w") as f:
+            for user_id in range(self.num_users):
+                items = self.get_recommendations(user_id, n)
+                f.write(str(user_id) + " " + " ".join([str(i) for i in items]) + "\n")
+            
+    def save_recommendations_csv(self, path, n=10):
+        """
+        Save the recommendations to a file
+        """
+        with open(path, "w") as f:
+            for user_id in range(self.num_users):
+                items = self.get_recommendations(user_id, n)
+                f.write(str(user_id) + "," + ",".join([str(i) for i in items]) + "\n")

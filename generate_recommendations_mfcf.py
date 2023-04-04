@@ -12,12 +12,6 @@ def main():
 
     if args.dataset == 'ml-1m':
         data = load_data_ml_1M_ratings()
-    # elif args.dataset == 'ml-100k':
-    #     data = load_data_ml_100k_ratings()
-    # elif args.dataset == 'ml-10m':
-    #     data = load_data_ml_10M_ratings()
-    # elif args.dataset == 'ml-20m':
-    #     data = load_data_ml_20M_ratings()
     else:
         raise ValueError('Dataset not found.')
     
