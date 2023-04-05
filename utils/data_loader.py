@@ -1,36 +1,36 @@
 import pandas as pd
 import numpy as np
-from config import COLD_START_THRESHOLD
+from config import *
 
-def load_data_ml_1M_ratings(file_name = 'data/ml-1m/ratings.dat'):
-    # Load data
-    data = pd.read_csv(file_name, sep='::', header=None, engine='python', encoding='latin-1')
+# def load_data_ml_1M_ratings(file_name = 'data/ml-1m/ratings.dat'):
+#     # Load data
+#     data = pd.read_csv(file_name, sep='::', header=None, engine='python', encoding='latin-1')
 
-    # Rename columns
-    data.columns = ['user_id', 'item_id', 'rating', 'timestamp']
+#     # Rename columns
+#     data.columns = ['user_id', 'item_id', 'rating', 'timestamp']
 
-    # Drop timestamp column
-    data = data.drop('timestamp', axis=1)
+#     # Drop timestamp column
+#     data = data.drop('timestamp', axis=1)
 
-    return data
+#     return data
 
-def load_data_ml_1M_items(file_name = 'data/ml-1m/movies.dat'):
-    # Load data
-    data = pd.read_csv(file_name, sep='::', header=None, engine='python', encoding='latin-1')
+# def load_data_ml_1M_items(file_name = 'data/ml-1m/movies.dat'):
+#     # Load data
+#     data = pd.read_csv(file_name, sep='::', header=None, engine='python', encoding='latin-1')
 
-    # Rename columns
-    data.columns = ['item_id', 'title', 'genres']
+#     # Rename columns
+#     data.columns = ['item_id', 'title', 'genres']
 
-    return data
+#     return data
 
-def load_data_ml_1M_users(file_name = 'data/ml-1m/users.dat'):
-    # Load data
-    data = pd.read_csv(file_name, sep='::', header=None, engine='python', encoding='latin-1')
+# def load_data_ml_1M_users(file_name = 'data/ml-1m/users.dat'):
+#     # Load data
+#     data = pd.read_csv(file_name, sep='::', header=None, engine='python', encoding='latin-1')
 
-    # Rename columns
-    data.columns = ['user_id', 'gender', 'age', 'occupation', 'zip-code']
+#     # Rename columns
+#     data.columns = ['user_id', 'gender', 'age', 'occupation', 'zip-code']
 
-    return data
+#     return data
 
 
 def train_test_split(data, test_size=0.2, train_size=0.8, random_state=0, shuffle=True):
@@ -51,6 +51,7 @@ def load_data_ml_1M():
     users = pd.read_csv('data/ml-1m/users.dat', sep='::', header=None, engine='python', encoding='latin-1')
     items = pd.read_csv('data/ml-1m/movies.dat', sep='::', header=None, engine='python', encoding='latin-1')
 
+
     # Rename columns
     data.columns = ['user_id', 'item_id', 'rating', 'timestamp']
     items.columns = ['item_id', 'title', 'genres']
@@ -58,6 +59,10 @@ def load_data_ml_1M():
 
     # Drop timestamp column
     data = data.drop('timestamp', axis=1)
+
+    # randomly sample 25% of the data for faster experimentation
+    # [ref: https://link.springer.com/chapter/10.1007/978-3-030-49461-2_18]
+    data = data.sample(frac=SAMPLE_FRAC, random_state=0)
 
     # to avoid cold start drop users with less than 5 ratings and items with less than 5 ratings 
     # [ref: https://link.springer.com/chapter/10.1007/978-3-030-49461-2_18]

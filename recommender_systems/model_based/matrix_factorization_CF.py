@@ -173,7 +173,6 @@ class MatrixFactorizationCF:
         Save the full matrix to a file
         """
         df = pd.DataFrame(self.full_matrix())
-        # df.to_csv(path, index=True, header=True)
         df.to_csv(path, index=False, header=False)
 
     
@@ -182,19 +181,18 @@ class MatrixFactorizationCF:
         Save the data matrix to a file
         """
         df = pd.DataFrame(self.data)
-        # df.to_csv(path, index=True, header=True)
         df.to_csv(path, index=False, header=False)
 
-    def save_recommendations(self, path, n=10):
-        """
-        Save the recommendations to a file
-        """
-        with open(path, "w") as f:
-            for user_id in range(self.num_users):
-                items = self.get_recommendations(user_id, n)
-                f.write(str(user_id) + " " + " ".join([str(i) for i in items]) + "\n")
+    # def save_recommendations(self, path, n=10):
+    #     """
+    #     Save the recommendations to a file
+    #     """
+    #     with open(path, "w") as f:
+    #         for user_id in range(self.num_users):
+    #             items = self.get_recommendations(user_id, n)
+    #             f.write(str(user_id) + " " + " ".join([str(i) for i in items]) + "\n")
             
-    def save_recommendations_csv(self, path, n=10):
+    def save_recommendations(self, path, n=10):
         """
         Save the recommendations to a file
         """

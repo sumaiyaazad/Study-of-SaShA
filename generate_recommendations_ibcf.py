@@ -10,26 +10,19 @@ import argparse
 def main():
     
     if args.dataset == 'ml-1m':
-        data = load_data_ml_1M_ratings()
-        user_data = load_data_ml_1M_users()
-        item_data = load_data_ml_1M_items()
-    # elif args.dataset == 'ml-100k':
-    #     data = load_data_ml_100k_ratings()
-    # elif args.dataset == 'ml-10m':
-    #     data = load_data_ml_10M_ratings()
-    # elif args.dataset == 'ml-20m':
-    #     data = load_data_ml_20M_ratings()
+        data, user_data, item_data = load_data_ml_1M()
     else:
         raise ValueError('Dataset not found.')
     
     
-    train_data, test_data = train_test_split(data, test_size=0.02, train_size=0.08)
+    # train_data, test_data = train_test_split(data, test_size=0.02, train_size=0.08)
 
 
 
     # drop index
-    train_data = train_data.reset_index(drop=True)
-    test_data = test_data.reset_index(drop=True)
+    # train_data = train_data.reset_index(drop=True)
+    # test_data = test_data.reset_index(drop=True)
+    data = data.reset_index(drop=True)
     user_data = user_data.reset_index(drop=True)
     item_data = item_data.reset_index(drop=True)
 
@@ -47,10 +40,10 @@ def main():
     else:
         raise ValueError('Similarity measure not found.')
 
-    ibcf = ItemBasedCF(train_data, test_data, user_data, item_data, n_users=args.n_users, n_items=args.n_items, similarity=similarity_measure)
+    ibcf = ItemBasedCF(data, user_data, item_data, n_users=args.n_users, n_items=args.n_items, similarity=similarity_measure)
 
-    # output = OUTDIR + 'user_based_CF/' + 'user_based_CF_' + 'ml-1m' + 'recommendations.csv'
-    output = OUTDIR + 'item_based_CF/' + 'item_based_CF_' + args.dataset + args.output_filename
+    # output = OUTDIR + 'user_based_CF/' + 'user_based_CF_' + 'ml-1m' + '_recommendations.csv'
+    output = OUTDIR + 'item_based_CF/' + 'item_based_CF_' + args.dataset + '_' + args.output_filename
 
     # create directory if it doesn't exist
     if not os.path.exists(OUTDIR + 'item_based_CF/'):
@@ -66,7 +59,7 @@ def main():
         # print(ubcf.user_user_similarity)
 
 
-    ibcf.getRecommendationsForAllUsers(verbose=True, output_filename=output, sep=',', n_neighbors=args.n_neighbors)
+    ibcf.getRecommendationsForAllUsers(verbose=True, output_filename=output, sep=',', n_neighbors=args.n_neighbors, top_n=args.top_n)
 
     print()
     print('Experiment completed.')
@@ -80,6 +73,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_users', type=int, default=None, help='number of users to use')
     parser.add_argument('--n_items', type=int, default=None, help='number of items to use')
     parser.add_argument('--n_neighbors', type=int, default=10, help='number of neighbors to use')
+    parser.add_argument('--top_n', type=int, default=50, help='top n recommendations to return')
     parser.add_argument('--similarity_measure', type=str, default='adjusted_cosine', help='similarity measure to use')
     parser.add_argument('--verbose', type=bool, default=False, help='verbose mode')
     parser.add_argument('--output_filename', type=str, default='recommendations.csv', help='output filename')
@@ -102,6 +96,7 @@ if __name__ == '__main__':
     print('Number of users: {}'.format(args.n_users))
     print('Number of items: {}'.format(args.n_items))
     print('Number of neighbors: {}'.format(args.n_neighbors))
+    print('Top n recommendations: {}'.format(args.top_n))
     print('Similarity measure: {}'.format(args.similarity_measure))
     print('Output directory: {}'.format(OUTDIR + 'item_based_CF/' + 'item_based_CF_' + args.dataset + args.output_filename))
     if args.save_simi:

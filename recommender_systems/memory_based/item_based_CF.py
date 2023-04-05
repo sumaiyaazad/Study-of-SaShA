@@ -13,12 +13,11 @@ import pickle
 
 class ItemBasedCF:
 
-    def __init__(self, train_data, test_data, user_data, item_data, n_users=None, n_items=None, similarity=cosine_similarity):
+    def __init__(self, train_data, user_data, item_data, n_users=None, n_items=None, similarity=cosine_similarity):
 
 
         if n_users is not None and n_items is not None:
             self.train_data = train_data
-            self.test_data = test_data
 
             self.user_data = user_data
             self.item_data = item_data
@@ -36,7 +35,6 @@ class ItemBasedCF:
             self.n_items = len(self.item_data['item_id'].unique())
             
             self.train_data = train_data.loc[train_data['user_id'].isin(self.user_data['user_id']) & train_data['item_id'].isin(self.item_data['item_id'])]
-            self.test_data = test_data.loc[test_data['user_id'].isin(self.user_data['user_id']) & test_data['item_id'].isin(self.item_data['item_id'])]
 
         elif n_users is None and n_items is not None:
             
@@ -47,7 +45,6 @@ class ItemBasedCF:
             self.n_items = n_items
             
             self.train_data = train_data.loc[train_data['user_id'].isin(self.user_data['user_id']) & train_data['item_id'].isin(self.item_data['item_id'])]
-            self.test_data = test_data.loc[test_data['user_id'].isin(self.user_data['user_id']) & test_data['item_id'].isin(self.item_data['item_id'])]
         else:
 
             self.n_users = n_users
@@ -57,7 +54,6 @@ class ItemBasedCF:
             self.item_data = item_data[:n_items]
             
             self.train_data = train_data.loc[train_data['user_id'].isin(self.user_data['user_id']) & train_data['item_id'].isin(self.item_data['item_id'])]
-            self.test_data = test_data.loc[test_data['user_id'].isin(self.user_data['user_id']) & test_data['item_id'].isin(self.item_data['item_id'])]
             
         self.similarity = similarity
         self.itemUserMatrix = None
@@ -246,7 +242,7 @@ class ItemBasedCF:
 
         return items_to_recommend
     
-    def getRecommendationsForAllUsers(self, n_neighbors=10, verbose=False, output_filename='output/recommendations.csv', sep='::'):
+    def getRecommendationsForAllUsers(self, n_neighbors=10, verbose=False, output_filename='output/recommendations.csv', sep='::', top_n=None):
 
         if self.item_item_similarity is None:
             self.getItemItemSimilarity(verbose=verbose)
@@ -274,6 +270,10 @@ class ItemBasedCF:
 
         with open(output_filename, "w") as f:
             for user, items in self.recommendations.items():
+                if top_n is not None:
+                    # sort the items by rating
+                    items = sorted(items, key=lambda x: x[1], reverse=True)
+                    items = items[:top_n]
                 for item, rating in items:
                     f.write(str(user) + sep + str(item) + sep + str(rating) + "\n")
 

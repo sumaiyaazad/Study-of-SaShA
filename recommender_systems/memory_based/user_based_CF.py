@@ -13,11 +13,11 @@ import pickle
 
 class UserBasedCF:
 
-    def __init__(self, train_data, test_data, user_data, item_data, n_users=None, n_items=None, similarity=cosine_similarity):
+    def __init__(self, train_data, user_data, item_data, n_users=None, n_items=None, similarity=cosine_similarity):
 
         if n_users is None:
             self.train_data = train_data
-            self.test_data = test_data
+            # self.test_data = test_data
 
             self.user_data = user_data
             self.item_data = item_data
@@ -34,7 +34,7 @@ class UserBasedCF:
             self.item_data = item_data[:n_items]
             
             self.train_data = train_data.loc[train_data['user_id'].isin(self.user_data['user_id']) & train_data['item_id'].isin(self.item_data['item_id'])]
-            self.test_data = test_data.loc[test_data['user_id'].isin(self.user_data['user_id']) & test_data['item_id'].isin(self.item_data['item_id'])]
+            # self.test_data = test_data.loc[test_data['user_id'].isin(self.user_data['user_id']) & test_data['item_id'].isin(self.item_data['item_id'])]
             
         self.similarity = similarity
         self.userItemMatrix = None
@@ -215,7 +215,7 @@ class UserBasedCF:
 
         return items_to_recommend
     
-    def getRecommendationsForAllUsers(self, n_neighbors=10, verbose=False, output_filename='output/recommendations.csv', sep='::'):
+    def getRecommendationsForAllUsers(self, n_neighbors=10, verbose=False, output_filename='output/recommendations.csv', sep='::', top_n=None):
 
         if self.user_user_similarity is None:
             self.getUserUserSimilarity(verbose=verbose)
@@ -242,6 +242,9 @@ class UserBasedCF:
 
         with open(output_filename, "w") as f:
             for user, items in self.recommendations.items():
+                if top_n is not None:
+                    items = sorted(items, key=lambda x: x[1], reverse=True)
+                    items = items[:top_n]
                 for item, rating in items:
                     f.write(str(user) + sep + str(item) + sep + str(rating) + "\n")
 

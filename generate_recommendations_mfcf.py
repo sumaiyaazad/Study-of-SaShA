@@ -11,7 +11,7 @@ import argparse
 def main():
 
     if args.dataset == 'ml-1m':
-        data = load_data_ml_1M_ratings()
+        data, user_data, item_data = load_data_ml_1M()
     else:
         raise ValueError('Dataset not found.')
     
@@ -32,7 +32,7 @@ def main():
 
 
     
-    path = OUTDIR + 'matrix_factorization_CF/' + 'matrix_factorization_CF_' + args.dataset + 'full_mat.csv'
+    path = OUTDIR + 'matrix_factorization_CF/' + 'matrix_factorization_CF_' + args.dataset + '_full_mat.csv'
 
     # create directory if it doesn't exist
     if not os.path.exists(OUTDIR + 'matrix_factorization_CF/'):
@@ -42,9 +42,10 @@ def main():
     mf = MatrixFactorizationCF(data, K=args.k, alpha=args.alpha, beta=args.beta, iterations=args.max_iter)
     # mf = MatrixFactorizationCF(data, K=K, alpha=ALPHA, beta=BETA, iterations=MAX_ITER)
 
-    mf.save_data_matrix(OUTDIR + 'matrix_factorization_CF/' + 'matrix_factorization_CF_' + args.dataset + 'data_matrix.csv')
+    mf.save_data_matrix(OUTDIR + 'matrix_factorization_CF/' + 'matrix_factorization_CF_' + args.dataset + '_data_matrix.csv')
     mses = mf.train(verbose=args.verbose)
     mf.save_full_matrix(path)
+    mf.save_recommendations(OUTDIR + 'matrix_factorization_CF/' + 'matrix_factorization_CF_' + args.dataset + '_recommendations.csv', n=10)
 
     # plot mse vs iterations
 
@@ -56,7 +57,7 @@ def main():
     plt.xlabel("Iterations")
     plt.ylabel("MSE")
     plt.title("MSE vs Iterations")
-    plt.savefig(OUTDIR + 'matrix_factorization_CF/' + 'matrix_factorization_CF_' + args.dataset + 'mse.png')
+    plt.savefig(OUTDIR + 'matrix_factorization_CF/' + 'matrix_factorization_CF_' + args.dataset + '_mse.png')
 
     print()
     print('Experiment completed.')
@@ -69,12 +70,13 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default='ml-1m', help='dataset to use')
     parser.add_argument('--n_users', type=int, default=None, help='number of users to use')
     parser.add_argument('--n_items', type=int, default=None, help='number of items to use')
-    parser.add_argument('--verbose', type=bool, default=False, help='verbose mode')
+    parser.add_argument('--top_n', type=int, default=50, help='top n recommendations')
+    parser.add_argument('--verbose', type=bool, default=True, help='verbose mode')
     parser.add_argument('--output_filename', type=str, default='full_matrix.csv', help='output filename')
-    parser.add_argument('--k', type=int, default=2, help='number of latent factors')
+    parser.add_argument('--k', type=int, default=5, help='number of latent factors')
     parser.add_argument('--alpha', type=float, default=0.001, help='learning rate')
     parser.add_argument('--beta', type=float, default=0.02, help='regularization parameter')
-    parser.add_argument('--max_iter', type=int, default=50, help='maximum number of iterations')
+    parser.add_argument('--max_iter', type=int, default=100, help='maximum number of iterations')
     args = parser.parse_args()
 
 
@@ -88,6 +90,7 @@ if __name__ == '__main__':
     print('Dataset: {}'.format(args.dataset))
     print('Number of users: {}'.format(args.n_users))
     print('Number of items: {}'.format(args.n_items))
+    print('Top n recommendations: {}'.format(args.top_n))
     print('Number of latent factors: {}'.format(args.k))
     print('Learning rate: {}'.format(args.alpha))
     print('Regularization parameter: {}'.format(args.beta))
