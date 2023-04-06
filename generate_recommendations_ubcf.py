@@ -4,6 +4,7 @@ from recommender_systems.memory_based.user_based_CF import UserBasedCF
 from utils.data_loader import *
 from config import *
 import os
+from utils.notification import *
 
 import argparse
 
@@ -41,7 +42,7 @@ def main():
         raise ValueError('Similarity measure not found.')
 
 
-    ubcf = UserBasedCF(data, user_data, item_data, n_users=args.n_users, n_items=args.n_items, similarity=similarity_measure)
+    ubcf = UserBasedCF(data, user_data, item_data, n_users=args.n_users, n_items=args.n_items, similarity=similarity_measure, notification_level=args.not_level)
 
     # output = OUTDIR + 'user_based_CF/' + 'user_based_CF_' + 'ml-1m' + '_recommendations.csv'
     output = OUTDIR + 'user_based_CF/' + 'user_based_CF_' + args.dataset + '_' + args.output_filename
@@ -66,6 +67,7 @@ def main():
 
     print()
     print('Experiment completed.')
+    balloon_tip('SAShA Detection', 'UBCF recommendation experiment completed.')
 
 
 if __name__ == '__main__':
@@ -79,6 +81,7 @@ if __name__ == '__main__':
     parser.add_argument('--top_n', type=int, default=50, help='number of top recommendations to generate')
     parser.add_argument('--similarity_measure', type=str, default='cosine', help='similarity measure to use')
     parser.add_argument('--verbose', type=bool, default=False, help='verbose mode')
+    parser.add_argument('--not_level', type=int, default=0, help='notification level, 0: no notification, 1: only at the end, 2: at verbose mode')
     parser.add_argument('--output_filename', type=str, default='recommendations.csv', help='output filename')
     parser.add_argument('--sep', type=str, default=',', help='separator for output file')
     parser.add_argument('--save_simi', type=bool, default=False, help='save similarity matrix')

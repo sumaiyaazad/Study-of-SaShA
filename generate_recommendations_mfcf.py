@@ -5,6 +5,7 @@ from utils.data_loader import *
 from config import *
 import os
 import matplotlib.pyplot as plt
+from utils.notification import *
 
 import argparse
 
@@ -15,16 +16,19 @@ def main():
     else:
         raise ValueError('Dataset not found.')
     
-    
-    data = convert_to_matrix(data)
+    # converting data to matrix (user_index, item_index) = rating
+    data, user_data, item_data = convert_to_matrix(data, user_data, item_data)
 
-    if args.n_users is None:
-        args.n_users = data.shape[0]
+    # if args.n_users is None:
+    #     args.n_users = data.shape[0]
 
-    if args.n_items is None:
-        args.n_items = data.shape[1]
+    # if args.n_items is None:
+    #     args.n_items = data.shape[1]
 
-    data = data[:args.n_users, :args.n_items]
+    # data = data[:args.n_users, :args.n_items]
+
+    args.n_users = data.shape[0]
+    args.n_items = data.shape[1]
 
     print('number of users: ', args.n_users)
     print('number of items: ', args.n_items)
@@ -39,13 +43,13 @@ def main():
         os.makedirs(OUTDIR + 'matrix_factorization_CF/')
 
     # mf = MatrixFactorizationCF(data, K=2, alpha=0.001, beta=0.02, iterations=100)
-    mf = MatrixFactorizationCF(data, K=args.k, alpha=args.alpha, beta=args.beta, iterations=args.max_iter)
+    mf = MatrixFactorizationCF(data, user_data, item_data, K=args.k, alpha=args.alpha, beta=args.beta, iterations=args.max_iter, notification_level=args.not_level)
     # mf = MatrixFactorizationCF(data, K=K, alpha=ALPHA, beta=BETA, iterations=MAX_ITER)
 
     mf.save_data_matrix(OUTDIR + 'matrix_factorization_CF/' + 'matrix_factorization_CF_' + args.dataset + '_data_matrix.csv')
     mses = mf.train(verbose=args.verbose)
     mf.save_full_matrix(path)
-    mf.save_recommendations(OUTDIR + 'matrix_factorization_CF/' + 'matrix_factorization_CF_' + args.dataset + '_recommendations.csv', n=10)
+    mf.save_recommendations(OUTDIR + 'matrix_factorization_CF/' + 'matrix_factorization_CF_' + args.dataset + '_recommendations.csv', n=10, verbose=args.verbose)
 
     # plot mse vs iterations
 
@@ -61,6 +65,7 @@ def main():
 
     print()
     print('Experiment completed.')
+    balloon_tip('SAShA Detection', 'MFCF recommendation generation experiment completed.')
 
 
 if __name__ == '__main__':
@@ -72,6 +77,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_items', type=int, default=None, help='number of items to use')
     parser.add_argument('--top_n', type=int, default=50, help='top n recommendations')
     parser.add_argument('--verbose', type=bool, default=True, help='verbose mode')
+    parser.add_argument('--not_level', type=int, default=0, help='notification level, 0: no notification, 1: only at the end, 2: at verbose mode')
     parser.add_argument('--output_filename', type=str, default='full_matrix.csv', help='output filename')
     parser.add_argument('--k', type=int, default=5, help='number of latent factors')
     parser.add_argument('--alpha', type=float, default=0.001, help='learning rate')

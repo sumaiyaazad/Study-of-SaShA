@@ -7,13 +7,28 @@ import math as m
 import pandas as pd
 from utils.similarity_measures import *
 import pickle
+from utils.notification import *
 
 
 # implementation of item based collaborative filtering
 
 class ItemBasedCF:
 
-    def __init__(self, train_data, user_data, item_data, n_users=None, n_items=None, similarity=cosine_similarity):
+    def __init__(self, train_data, user_data, item_data, n_users=None, n_items=None, similarity=cosine_similarity, notification_level=0):
+
+        """
+        Initialize the ItemBasedCF class
+        :param train_data: pandas dataframe of train data
+        :param user_data: pandas dataframe of user data
+        :param item_data: pandas dataframe of item data
+        :param n_users: number of users to use
+        :param n_items: number of items to use
+        :param similarity: similarity measure to use
+        :param notification_level: 
+                                    0: no notification, 
+                                    1: notification when training is done and recommendations are saved,
+                                    2: notification whatever verbosed :3
+        """
 
 
         if n_users is not None and n_items is not None:
@@ -60,6 +75,7 @@ class ItemBasedCF:
         self.item_item_similarity = None
         self.recommendations = None
         self.save_similarities = None
+        self.notification_level = notification_level
 
     def update_save_similarities(self, filename):
         self.save_similarities = filename
@@ -121,6 +137,9 @@ class ItemBasedCF:
             print('Time taken: {:.2f} seconds'.format(time.time() - start_time))
             print('Item-user matrix created.')
             print()
+            if self.notification_level >= 2:
+                balloon_tip( 'SAShA Detection','Item-user matrix created.')
+
 
     
     def getItemItemSimilarity(self, verbose=False):
@@ -145,6 +164,8 @@ class ItemBasedCF:
             print('Time taken: {:.2f} seconds'.format(time.time() - start_time))
             print('Item-item similarity matrix created.')
             print()
+            if self.notification_level >= 2:
+                balloon_tip( 'SAShA Detection','Item-item similarity matrix created.')
 
 
         if self.save_similarities is not None:
@@ -167,17 +188,9 @@ class ItemBasedCF:
         # get unrated items by user
         rated_items = self.train_data[self.train_data['user_id'] == user_id]['item_id'].unique().tolist()
         unrated_items = set(self.item_data['item_id'].unique().tolist()).difference(rated_items)
-
-        # filter rated items similarity
-        iisim = {k: v for k, v in self.item_item_similarity.items() if k in rated_items}
-
-
         
         items_to_recommend = {}
 
-
-
-### =================================================================================================== new code 0
         for item1 in unrated_items:
             
             top_k_similar_items = sorted(self.item_item_similarity[item1].items(), key=lambda x: x[1], reverse=True)[:n_neighbors]
@@ -189,55 +202,14 @@ class ItemBasedCF:
             if norm_factor != 0:
                 items_to_recommend[item1] /= norm_factor
 
-
-### =================================================================================================== new code 0
-
-### =================================================================================================== new code
-        # for item1 in unrated_items:
-            
-        #     # top_k_similar_items = sorted(self.item_item_similarity[item1].items(), key=lambda x: x[1], reverse=True)[:n_neighbors]
-        #     norm_factor = sum([x[1] for x in self.item_item_similarity[item1].items() if x[0] in rated_items])
-        #     for item2 in rated_items:
-        #         items_to_recommend.setdefault(item1, 0)
-        #         items_to_recommend[item1] += self.item_item_similarity[item1][item2] * self.itemUserMatrix[item2][user_id]
-
-        #     if norm_factor != 0:
-        #         items_to_recommend[item1] /= norm_factor
-
-
-### =================================================================================================== new code
-
-### =================================================================================================== old code
-        # for item_id in unrated_items:
-        #     # get top k similar items
-            
-        #     top_similar_items = sorted(self.item_item_similarity[item_id].items(), key=lambda x: x[1], reverse=True)
-
-        #     # rated by user
-        #     rated_by_user = top_similar_items.copy()
-        #     for item in top_similar_items:
-        #         if item[0] not in rated_items:
-        #             rated_by_user.remove(item)
-
-
-        #     top_k_similar_items = rated_by_user[:n_neighbors]
-            
-        #     items_to_recommend.setdefault(item_id, 0)
-        #     norm_factor = sum([x[1] for x in top_k_similar_items])
-        #     for similar_item in top_k_similar_items:
-        #         items_to_recommend[item_id] += similar_item[1] * self.itemUserMatrix[similar_item[0]][user_id]
-
-        #     if norm_factor != 0:
-        #         items_to_recommend[item_id] /= norm_factor
-
-### =================================================================================================== old code
-
         items_to_recommend = sorted(items_to_recommend.items(), key=lambda x: x[1], reverse=True)
 
         if verbose:
             print('Time taken: {:.2f} seconds'.format(time.time() - start_time))
             print('Recommendations for user {} obtained.'.format(user_id))
             print()
+            if self.notification_level >= 2:
+                balloon_tip( 'SAShA Detection','Recommendations for user {} obtained.'.format(user_id))
 
 
         return items_to_recommend
@@ -257,8 +229,10 @@ class ItemBasedCF:
         
         if verbose:
             print('Time taken: {:.2f} seconds'.format(time.time() - start_time))
-            print('Recommendations for all users are:')
+            print('Recommendations for all users generated.')
             print()
+            if self.notification_level >= 1:
+                balloon_tip( 'SAShA Detection','Recommendations for all users generated.')
 
         # write to file
         
@@ -271,8 +245,9 @@ class ItemBasedCF:
         with open(output_filename, "w") as f:
             for user, items in self.recommendations.items():
                 if top_n is not None:
-                    # sort the items by rating
-                    items = sorted(items, key=lambda x: x[1], reverse=True)
+                    # sort the items by rating (descending) and then by item id (ascending):    WILL IT WORK?
+                    items = sorted(items, key=lambda x: (x[1],-x[0]), reverse=True)
+                    # items = sorted(items, key=lambda x: x[1], reverse=True)
                     items = items[:top_n]
                 for item, rating in items:
                     f.write(str(user) + sep + str(item) + sep + str(rating) + "\n")

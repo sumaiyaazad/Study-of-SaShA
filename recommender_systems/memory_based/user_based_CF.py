@@ -7,13 +7,14 @@ import math as m
 import pandas as pd
 from utils.similarity_measures import *
 import pickle
+from utils.notification import *
 
 
 # implementation of item based collaborative filtering
 
 class UserBasedCF:
 
-    def __init__(self, train_data, user_data, item_data, n_users=None, n_items=None, similarity=cosine_similarity):
+    def __init__(self, train_data, user_data, item_data, n_users=None, n_items=None, similarity=cosine_similarity, notification_level=0):
 
         if n_users is None:
             self.train_data = train_data
@@ -42,6 +43,7 @@ class UserBasedCF:
         self.recommendations = None
 
         self.save_similarities = None
+        self.notification_level = notification_level
 
     def update_save_similarities(self, filename):
         self.save_similarities = filename
@@ -103,6 +105,8 @@ class UserBasedCF:
             print('Time taken: {:.2f} seconds'.format(time.time() - start_time))
             print('User-item matrix created.')
             print()
+            if self.notification_level >= 2:
+                balloon_tip('SAShA Detection', 'User-item matrix created.')
 
     def getUserPairSimilarity(self, user1, user2):
         '''
@@ -152,6 +156,8 @@ class UserBasedCF:
             print('Time taken: {:.2f} seconds'.format(time.time() - start_time))
             print('User-user similarity matrix created.')
             print()
+            if self.notification_level >= 2:
+                balloon_tip('SAShA Detection', 'User-user similarity matrix created.')
 
 
         if self.save_similarities is not None:
@@ -212,6 +218,8 @@ class UserBasedCF:
             print('Time taken: {:.2f} seconds'.format(time.time() - start_time))
             print('Recommendations for user {} are:'.format(user_id))
             print()
+            if self.notification_level >= 1:
+                balloon_tip('SAShA Detection', 'Recommendations for user {} are:'.format(user_id))
 
         return items_to_recommend
     
@@ -230,8 +238,10 @@ class UserBasedCF:
         
         if verbose:
             print('Time taken: {:.2f} seconds'.format(time.time() - start_time))
-            print('Recommendations for all users are:')
+            print('Recommendations for all users generated')
             print()
+            if self.notification_level >= 1:
+                balloon_tip('SAShA Detection', 'Recommendations for all users generated') 
 
         # write to file
         

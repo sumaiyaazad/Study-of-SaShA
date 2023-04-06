@@ -4,28 +4,37 @@ from utils.data_loader import *
 from utils.similarity_measures import *
 from tqdm import tqdm
 import time
+from utils.notification import *
 
 class MatrixFactorizationCF:
-    def __init__(self, data, K, alpha, beta, iterations):
+    def __init__(self, data, users, items, K, alpha, beta, iterations, notification_level=0):
         """
         Perform matrix factorization to predict empty
         entries in a matrix.
 
         Arguments
-        - data (ndarray)   : user-item rating matrix
+        - data (ndarray)   : user-item rating matrix (num_users x num_items), (user_index, item_index) = rating
         - K (int)          : number of latent features
         - alpha (float)    : learning rate
         - beta (float)     : regularization parameter
         - iterations (int) : number of steps to take when
                              optimizing the W and H matrices
+        - users (dict)     : dictionary of users, maps user_id to index in the data matrix
+        - items (dict)     : dictionary of items, maps item_id to index in the data matrix
+        - notification_level (int) :    0 = no notifications, 
+                                        1 = notify when recommendations are generated, 
+                                        2 = notify when recommendations are generated and when training is complete
         """
 
         self.data = data
-        self.num_users, self.num_items = data.shape
+        self.users = users
+        self.items = items
+        self.num_users, self.num_items = len(users), len(items)
         self.K = K
         self.alpha = alpha
         self.beta = beta
         self.iterations = iterations
+        self.notification_level = notification_level
 
     def train(self, verbose=False, show_mse=False):
         # Initialize user and item latent feature matrice
@@ -33,11 +42,13 @@ class MatrixFactorizationCF:
         self.H = np.random.normal(scale=1./self.K, size=(self.num_items, self.K))
 
         # Initialize the biases
+
         self.b_u = np.zeros(self.num_users)
         self.b_i = np.zeros(self.num_items)
         self.b = np.mean(self.data[np.where(self.data != 0)])
 
         # Create a list of training samples
+        # (user_index, item_index, rating)
         self.samples = [
             (i, j, self.data[i, j])
             for i in range(self.num_users)
@@ -53,7 +64,6 @@ class MatrixFactorizationCF:
             start_time = time.time()
 
         for i in tqdm(range(self.iterations)):
-        # for i in range(self.iterations):
             np.random.shuffle(self.samples)
             self.sgd()
             mse = self.mse()
@@ -66,6 +76,8 @@ class MatrixFactorizationCF:
         if verbose:
             print('*'*10, 'Training finished...', '*'*10)
             print('Total training time: ', time.time() - start_time)
+            if self.notification_level >= 2:
+                balloon_tip('SAShA Detection', 'Training finished')
 
         return training_process
 
@@ -121,15 +133,8 @@ class MatrixFactorizationCF:
         """
         return self.b + self.b_u[:,np.newaxis] + self.b_i[np.newaxis:,] + self.W.dot(self.H.T)
     
-    def predict(self, i, j):
-        """
-        Predict the rating of user i for item j
-        """
-        return self.get_rating(i, j)
     
     def print_results(self):
-
-        # Print results
         print("P x Q:")
         print(self.full_matrix())
         print("Global bias:")
@@ -182,21 +187,26 @@ class MatrixFactorizationCF:
         """
         df = pd.DataFrame(self.data)
         df.to_csv(path, index=False, header=False)
-
-    # def save_recommendations(self, path, n=10):
-    #     """
-    #     Save the recommendations to a file
-    #     """
-    #     with open(path, "w") as f:
-    #         for user_id in range(self.num_users):
-    #             items = self.get_recommendations(user_id, n)
-    #             f.write(str(user_id) + " " + " ".join([str(i) for i in items]) + "\n")
-            
-    def save_recommendations(self, path, n=10):
+        
+    def save_recommendations(self, path, n=10, verbose=False):
         """
         Save the recommendations to a file
         """
+        if verbose:
+            print('*'*10, 'Saving recommendations...', '*'*10)
+            start_time = time.time()
+
+        # exchange keys and values in the items dictionary
+        items_rev = {v: k for k, v in self.items.items()}
+
         with open(path, "w") as f:
-            for user_id in range(self.num_users):
-                items = self.get_recommendations(user_id, n)
-                f.write(str(user_id) + "," + ",".join([str(i) for i in items]) + "\n")
+            for user_id in tqdm(self.users.keys()):
+                items = self.get_recommendations(self.users[user_id], n)
+                for item in items:
+                    f.write(str(user_id) + "," + str(items_rev[item]) + "," + str(self.get_rating(self.users[user_id], item)) + "\n")
+
+        if verbose:
+            print('*'*10, 'Recommendations saved...', '*'*10)
+            print('Total saving time: ', time.time() - start_time)
+            if self.notification_level >= 1:
+                balloon_tip( 'SAShA Detection','Recommendations for all users generated.')
