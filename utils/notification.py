@@ -37,7 +37,7 @@ class WindowsBalloonTip:
                          (self.hwnd, 0, NIF_INFO, win32con.WM_USER+20,\
                           hicon, "Balloon  tooltip",msg,200,title))
         # self.show_balloon(title, msg)
-        time.sleep(10)
+        time.sleep(8)
         DestroyWindow(self.hwnd)
     def OnDestroy(self, hwnd, msg, wparam, lparam):
         nid = (self.hwnd, 0)

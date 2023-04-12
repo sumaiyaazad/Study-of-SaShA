@@ -4,7 +4,7 @@ This repository contains the code for our undergraduate thesis work titled "On D
 
 ## Abstract
 
-Collaborative filtering (CF) is a widely used technique for recommender systems. It is based on the assumption that users with similar preferences tend to rate items similarly. However, this assumption is violated in the presence of shilling attacks. In this paper, we propose a novel approach to detect shilling attacks in CF-based recommendation systems. We use the knowledge graph (KG) to detect shilling attacks. We propose a novel KG-based shilling attack detection (KG-SAD) approach that uses the KG to detect shilling attacks. We evaluate our approach on two real-world datasets. The results show that our approach outperforms the state-of-the-art approaches in terms of precision, recall, and F1-score.
+Collaborative filtering (CF) is a widely used technique for recommender systems. It is based on the assumption that users with similar preferences tend to rate items similarly. However, this assumption is violated in the presence of shilling attacks. 
 
 ## Requirements
 
@@ -30,10 +30,24 @@ Collaborative filtering (CF) is a widely used technique for recommender systems.
 ### Generating Recommendations
 
 - Run the following command to generate recommendations.
-- see [generate_recommendations_ubcf.py](generate_recommendations_ubcf.py) for more details.
+- see [generate_recommendations_ubcf.py](generate_recommendations_ubcf.py) for more details about the command line arguments.
 
 ```bash
     python generate_recommendations_ubcf.py
+
+```
+
+### Generating Shilling Profiles
+
+- Run the following command to generate shilling attacks.
+- see [generate_shilling_profiles_base_attacks.py](generate_shilling_profiles_base_attacks.py) for more details about the command line arguments.
+- The following attacks are currently supported:
+
+    - `random`: Randomly select items for filler and rated by sampling from the normal distribution with mean and standard deviation of the user's ratings.
+    - `average`: Selected items randomly and rated based on the average rating of the items.
+
+```bash
+    python generate_shilling_profiles_base_attacks.py --attack=<attack_name>
 
 ```
 
@@ -47,7 +61,10 @@ Collaborative filtering (CF) is a widely used technique for recommender systems.
 
 ### Evaluation
 
-- Run the following command to evaluate the model.
+- Currently the following metrics are supported:
+
+    - `prediction shift`: The prediction shift is a way of quantifying how well a pushed (or nuked) item has been shifted in a direction favoring its goal.
+    - `hit ratio`: Hit ratio is a measure of whether the pushed item made it to the top-k list (or was removed from the top-k list).
 
 ```bash
 
