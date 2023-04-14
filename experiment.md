@@ -62,10 +62,10 @@
                         {attack}
                             post_attack_{similarity measure}_recommendations.csv
                             attack_size_stat
-                                post_detection_{similarity measure}_{attack size}_{filler size}_recommendations.csv
+                                post_attack_{similarity measure}_{attack size}_{filler size}_recommendations.csv
                             filler_size_stat
-                                post_detection_{similarity measure}_{attack size}_{filler size}_recommendations.csv
-                            post_detection_{similarity measure}_{attack size}_{filler size}_recommendations.csv
+                                post_attack_{similarity measure}_{attack size}_{filler size}_recommendations.csv
+                            post_detection_{similarity measure}_{attack size}_{filler size}_{detection}_recommendations.csv
                     attack_profiles
                         {attack}_{attack size}_{filler size}.csv
                         {attack}_{attack size}_{filler size}_detected.csv

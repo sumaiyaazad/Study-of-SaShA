@@ -71,3 +71,16 @@ def load_data_ml_1M(split=False):
         items = items.reset_index(drop=True)
 
         return data, users, items
+
+
+def load_data_dummy():
+
+    data = pd.read_csv('data/dummy/ratings.csv', header=None)
+    users = pd.read_csv('data/dummy/users.csv', header=None)
+    items = pd.read_csv('data/dummy/items.csv', header=None)
+
+    data.columns = ['user_id', 'item_id', 'rating']
+    users.columns = ['user_id']
+    items.columns = ['item_id']
+
+    return (data, users, items), None

@@ -84,7 +84,7 @@ class ItemBasedCF:
         if self.log is not None:
             self.log.append('Similarities saved to {}'.format(self.similarities_filename))
         
-        print('Similarities saved to {}'.format(self.save_similarities))
+        print('Similarities saved to {}'.format(self.similarities_filename))
 
     def loadSimilarities(self, verbose=False):
 
@@ -102,7 +102,7 @@ class ItemBasedCF:
 
         # load as csv
         try:
-            iisim_df = pd.read_csv(self.similarities_filename)
+            iisim_df = pd.read_csv(self.similarities_filename, header=None, names=['item1', 'item2', 'similarity'])
         except FileNotFoundError:
             print('WARNING:File not found. Similarities will be calculated and saved to {}'.format(self.similarities_filename))
             if self.log is not None:

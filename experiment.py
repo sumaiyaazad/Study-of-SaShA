@@ -1,75 +1,51 @@
-
-####################################################################################################
-# experiment flow:
-
-# choose dataset
-#   load data
-#   list most popular items
-#   list most unpopular items
-
-#   choose similarity measure
-#       generate pre-attack similarities -> save to file
-
-#       choose recommender system
-#           generate pre-attack recommendations -> save to file
-#           calculate pre-attack hit ratio -> save to result
-
-#           choose attack
-#               for each attack size (and fixed filler size)
-#                  generate attack profiles -> save to file
-#                  generate post-attack similarities -> save to file
-#                  generate post-attack recommendations -> save to file
-#                  calculate post-attack hit ratio -> save to result
-#                  calculate prediction shift with pre-attack recommendations -> save to result
-#               generate graph of (prediction shift, hit ratio) vs attack size -> save to result
-#               choose best attack size
-
-#               for each filler size (and best attack size)
-#                  generate attack profiles -> save to file
-#                  generate post-attack similarities -> save to file
-#                  generate post-attack recommendations -> save to file
-#                  calculate post-attack hit ratio -> save to result
-#                  calculate prediction shift with pre-attack recommendations -> save to result
-#               generate graph of (prediction shift, hit ratio) vs filler size -> save to result
-#               choose best filler size 
-
-#               choose detection method (using best attack and filler size)
-#                   generate detected attack profiles -> save to file
-#                   generate post-detection similarities -> save to file
-#                   generate post-detection recommendations -> save to file
-#                   calculate post-detection hit ratio -> save to result
-#                   calculate prediction shift with pre-attack recommendations -> save to result
-#                   calculate detection accuracy -> save to result
-####################################################################################################
-
 import argparse
 import pandas as pd
 from config import *
 from utils.data_loader import *
+from utils.similarity_measures import *
 import os
 from utils.misc import *
 import utils.notification as noti
 from utils.log import Logger
 
-def generateRecommendations(train, rs_model, similarity, similarity_filename, recommendation_filename, log):
+def generateRecommendations(train, rs_model, similarity, similarities_dir, recommendation_filename, log):
     """
     Generate recommendations for all users in the training set
     param train: training set
     param rs_model: recommender system model
     param similarity: similarity measure
-    param similarity_filename: filename of attack similarity
+    param similarities_dir: directory to store similarity files
     param recommendation_filename: filename of storing recommendation result
     param log: object of Logger class
     """
 
+    if similarity == 'cosine':
+        similarity_function = cosine_similarity
+    elif similarity == 'pearson':
+        similarity_function = pearson_correlation
+    elif similarity == 'jaccard':
+        similarity_function = jaccard_similarity
+    elif similarity == 'adjusted_cosine':
+        similarity_function = adjusted_cosine_similarity
+    else:
+        if args.log:
+            log.append('similarity measure {} not found'.format(similarity))
+            log.abort()
+        noti.balloon_tip('SAShA Detection', 'Similarity measure {} not found. Experiment aborted.'.format(similarity))
+        raise ValueError('Similarity measure not found.')
+
     if rs_model == 'ibcf':
         from recommender_systems.memory_based.item_based_CF import ItemBasedCF as RS
-        rs = RS(train, similarity_filename, similarity=similarity, notification_level=0, log=log if args.log else None)
+        similarity_filename = similarities_dir + 'item_item_' + similarity + '.csv'
+
+        rs = RS(train, similarity_filename, similarity=similarity_function, notification_level=0, log=log if args.log else None)
         rs.getRecommendationsForAllUsers(n_neighbors=IKNN, verbose=True, output_filename=recommendation_filename, sep=',', top_n=TOP_N)
 
     elif rs_model == 'ubcf':
+        similarity_filename = similarities_dir + 'user_user_' + similarity + '.csv'
+
         from recommender_systems.memory_based.user_based_CF import UserBasedCF as RS
-        rs = RS(train, similarity_filename, similarity=similarity, notification_level=0, log=log if args.log else None)
+        rs = RS(train, similarity_filename, similarity=similarity_function, notification_level=0, log=log if args.log else None)
         rs.getRecommendationsForAllUsers(n_neighbors=UKNN, verbose=True, output_filename=recommendation_filename, sep=',', top_n=TOP_N)
 
     elif rs_model == 'mfcf':
@@ -105,9 +81,10 @@ def main():
     print('Experiment start time: ', now())
 
     # experiment result directory
-    num_of_dirs = len([name for name in os.listdir(OUTDIR) if os.path.isdir(os.path.join(OUTDIR, name)) and name.startswith('experiment_results_')])
+    
+    next_version = np.array([int(name[len('experiment_results_'):]) for name in os.listdir(OUTDIR) if os.path.isdir(os.path.join(OUTDIR, name)) and name.startswith('experiment_results_')]).max() + 1
 
-    dirname = OUTDIR + 'experiment_results_' + str(num_of_dirs) + '/'
+    dirname = OUTDIR + 'experiment_results_' + str(next_version) + '/'
     print('Experiment result directory: ', dirname)
     os.makedirs(dirname, exist_ok=True)
     bigskip()
@@ -122,6 +99,8 @@ def main():
         # load data -----------------------------------------------------------------------------------------------------------------------
         if dataset == 'ml-1m':
             train, test = load_data_ml_1M(split=True)
+        elif dataset == 'dummy':
+            train, _ = load_data_dummy()
         else:
             if args.log:
                 log.append('dataset {} not found'.format(dataset))
@@ -155,38 +134,23 @@ def main():
             log.append('generated {} popular items for dataset {}. Saved in file {}'.format(NUM_TARGET_ITEMS, dataset, currentdir + '{}_popular_items.csv'.format(NUM_TARGET_ITEMS)))
 
         # list most unpopular items; to be used lates as target items of push attacks
-        unpopular_items = items_sorted.tail(NUM_TARGET_ITEMS)
+        unpopular_items = items_sorted.tail(NUM_TARGET_ITEMS).iloc[::-1]
         unpopular_items.to_csv(currentdir + '{}_unpopular_items.csv'.format(NUM_TARGET_ITEMS), index=False)
         print('generated {} unpopular items for dataset {}'.format(NUM_TARGET_ITEMS, dataset))
         if args.log:
             log.append('generated {} unpopular items for dataset {}. Saved in file {}'.format(NUM_TARGET_ITEMS, dataset, currentdir + '{}_unpopular_items.csv'.format(NUM_TARGET_ITEMS)))
 
         # choose similarity measure --------------------------------------------------------------------------------------------------------
-        pre_attack_similarities_dir = dirname + 'pre_attack_similarities/'
+        pre_attack_similarities_dir = currentdir + 'similarities/pre_attack/'
         os.makedirs(pre_attack_similarities_dir, exist_ok=True)
 
-        post_attack_similarities_dir = dirname + 'post_attack_similarities/'
+        post_attack_similarities_dir = currentdir + 'similarities/post_attack/'
         os.makedirs(post_attack_similarities_dir, exist_ok=True)
 
-        post_detection_similarities_dir = dirname + 'post_detection_similarities/'
+        post_detection_similarities_dir = currentdir + 'similarities/post_detection/'
         os.makedirs(post_detection_similarities_dir, exist_ok=True)
 
         for similarity in SIMILARITY_MEASURES:
-
-            if similarity == 'cosine':
-                similarity_filename = 'cosine_similarity_{}.csv'.format(dataset)
-            elif similarity == 'pearson':
-                similarity_filename = 'pearson_similarity_{}.csv'.format(dataset)
-            elif similarity == 'adjusted_cosine':
-                similarity_filename = 'adjusted_cosine_similarity_{}.csv'.format(dataset)
-            else:
-                if args.log:
-                    log.append('similarity measure {} not found'.format(similarity))
-                    log.abort()
-
-                noti.balloon_tip('SAShA Detection', 'Similarity measure {} not found. Experiment aborted.'.format(similarity))
-                raise ValueError('Similarity measure not found.')
-            
             print('Proceeding with similarity measure {}'.format(similarity))
 
             if args.log:
@@ -202,19 +166,21 @@ def main():
                 # generate pre-attack recommendations ---------------------------------------------------------------------------------------
 
                 ### directories and filenames creations and definitions
+                recommendations_dir = currentdir + rs_model + '/recommendations/'
+                os.makedirs(recommendations_dir, exist_ok=True)
 
                 print('Generating pre-attack recommendations')
                 if args.log:
                     log.append('Pre-attack recommendations generation initiated')
 
-                generateRecommendations(train, rs_model, similarity, similarity_filename,  log)
+                pre_attack_recommendations_filename = recommendations_dir + 'pre_attack_{}_recommendations.csv'.format(similarity)
+                generateRecommendations(train=train, rs_model=rs_model, similarity=similarity, similarities_dir=pre_attack_similarities_dir, recommendation_filename=pre_attack_recommendations_filename, log=log)
+
+
+                # post_attack_recommendations_dir = recommendations_dir + attack + '/'
 
 
                 
-
-
-# i can optimize by generating simmilarity matrix only once for each dataset and saving them in a seperate file prehand will save time for multiple experiments
-
 
 
 if __name__ == '__main__':

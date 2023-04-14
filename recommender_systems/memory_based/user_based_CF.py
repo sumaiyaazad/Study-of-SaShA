@@ -90,7 +90,7 @@ class UserBasedCF:
         if self.log is not None:
             self.log.append('Similarities saved to {}'.format(self.similarities_filename))
 
-        print('Similarities saved to {}'.format(self.save_similarities))
+        print('Similarities saved to {}'.format(self.similarities_filename))
 
 
     def loadSimilarities(self, verbose=False):
@@ -109,7 +109,7 @@ class UserBasedCF:
 
         # load as csv
         try:
-            uusim_df = pd.read_csv(self.similarities_filename)
+            uusim_df = pd.read_csv(self.similarities_filename, header=None, names=['user1', 'user2', 'similarity'])
         except FileNotFoundError:
             print('WARNING:File not found. Similarities will be calculated and saved to {}'.format(self.similarities_filename))
             if self.log is not None:

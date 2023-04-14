@@ -11,21 +11,14 @@ import argparse
 def main():
 
     if args.dataset == 'ml-1m':
-        data, user_data, item_data = load_data_ml_1M()
+        train = load_data_ml_1M()
+    elif args.dataset == 'dummy':
+        train, _ = load_data_dummy()
     else:
         raise ValueError('Dataset not found.')
     
     
     # train_data, test_data = train_test_split(data, test_size=0.02, train_size=0.08)
-
-
-
-    # drop index
-    # train_data = train_data.reset_index(drop=True)
-    # test_data = test_data.reset_index(drop=True)
-    data = data.reset_index(drop=True)
-    user_data = user_data.reset_index(drop=True)
-    item_data = item_data.reset_index(drop=True)
 
     similarity_measure = cosine_similarity
 
@@ -42,7 +35,6 @@ def main():
         raise ValueError('Similarity measure not found.')
 
 
-    ubcf = UserBasedCF(data, user_data, item_data, n_users=args.n_users, n_items=args.n_items, similarity=similarity_measure, notification_level=args.not_level)
 
     # output = OUTDIR + 'user_based_CF/' + 'user_based_CF_' + 'ml-1m' + '_recommendations.csv'
     output = OUTDIR + 'user_based_CF/' + 'user_based_CF_' + args.dataset + '_' + args.output_filename
@@ -52,16 +44,9 @@ def main():
     if not os.path.exists(OUTDIR + 'user_based_CF/'):
         os.makedirs(OUTDIR + 'user_based_CF/')
 
+    similarity_filename = OUTDIR + 'user_based_CF/' + 'user_based_CF_' + args.simi_location
 
-    # save similarity matrix if it doesn't exist
-    if args.save_simi:
-        ubcf.update_save_similarities(OUTDIR + 'user_based_CF/' + 'user_based_CF_' + args.save_simi_location)
-
-    # load similarity matrix if it exists
-    if args.load_simi:
-        ubcf.loadSimilarities(OUTDIR + 'user_based_CF/' + 'user_based_CF_' + args.load_simi_location)
-        # print(ubcf.user_user_similarity)
-
+    ubcf = UserBasedCF(train, similarity_filename, similarity=similarity_measure, notification_level=args.not_level, log=None)
 
     ubcf.getRecommendationsForAllUsers(verbose=True, output_filename=output, sep=',', n_neighbors=args.n_neighbors, top_n=args.top_n)
 
@@ -84,10 +69,7 @@ if __name__ == '__main__':
     parser.add_argument('--not_level', type=int, default=0, help='notification level, 0: no notification, 1: only at the end, 2: at verbose mode')
     parser.add_argument('--output_filename', type=str, default='recommendations.csv', help='output filename')
     parser.add_argument('--sep', type=str, default=',', help='separator for output file')
-    parser.add_argument('--save_simi', type=bool, default=False, help='save similarity matrix')
-    parser.add_argument('--load_simi', type=bool, default=False, help='load similarity matrix')
-    parser.add_argument('--save_simi_location', type=str, default='user_user_similarity.pickle', help='location to save similarity matrix')
-    parser.add_argument('--load_simi_location', type=str, default='user_user_similarity.pickle', help='location to load similarity matrix from')
+    parser.add_argument('--simi_location', type=str, default='user_user_similarity.csv', help='location to save similarity matrix')
     args = parser.parse_args()
 
 
@@ -99,10 +81,7 @@ if __name__ == '__main__':
     print('Number of top recommendations: {}'.format(args.top_n))
     print('Similarity measure: {}'.format(args.similarity_measure))
     print('Output directory: {}'.format(OUTDIR + 'user_based_CF/' + 'user_based_CF_' + args.dataset + args.output_filename))
-    if args.save_simi:
-        print('Saving similarity matrix to: {}'.format(args.save_simi_location))
-    if args.load_simi:
-        print('Loading similarity matrix from: {}'.format(args.load_simi_location))
+    
     print()
 
 

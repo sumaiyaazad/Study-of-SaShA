@@ -109,15 +109,22 @@ def hamming_distance(x, y):
 
 # -------------------------------- correlation measures ---------------------------------
 # pearson correlation
-def pearson_correlation(x, y, x_mean, y_mean):
+def pearson_correlation(x, y):
 
     """
     x_mean and y_mean are the mean of x and y for all users
     """
 
-    x, y = handleNan(x, y)
-    x = x - x_mean
-    y = y - y_mean
+    if type(x) == dict:
+        x, y = get_common_ratings(x, y)
+    else:
+        x, y = handleNan(x, y)
+
+    if np.sum(x) == 0 or np.sum(y) == 0:
+        return 0
+    
+    x = x - np.mean(x)
+    y = y - np.mean(y)
     return np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
 
 # spearman correlation

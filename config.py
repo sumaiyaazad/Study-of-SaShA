@@ -1,11 +1,14 @@
 # global
 SEED = 2023
 DATADIR = './data/'
-DATASETS = ['ml-1m']
+DATASETS = ['dummy']
+# DATASETS = ['dummy', 'ml-1m']
 OUTDIR = './output/'
-ATTACKS = ['random', 'average']
-RS_MODELS = ['mfcf', 'ibcf', 'ubcf']
-SIMILARITY_MEASURES = ['adjusted_cosine']
+ATTACKS = ['random']
+# ATTACKS = ['random', 'average']
+RS_MODELS = ['mfcf', 'ubcf']
+# RS_MODELS = ['mfcf', 'ibcf', 'ubcf']
+SIMILARITY_MEASURES = ['cosine']
 # SIMILARITY_MEASURES = ['cosine', 'jaccard', 'pearson', 'adjusted_cosine']
 EVALUATIONS = ['hit_ratio', 'pred_shift']
 DETECTIONS = []
@@ -18,6 +21,7 @@ NUM_TARGET_ITEMS = 50
 
 rating_range = {
     'ml-1m': (1, 5),
+    'dummy': (1, 10),
 }
 
 try:
@@ -42,10 +46,12 @@ BETA = 0.02
 MAX_ITER = 100
 
 # ibcf: item-based collaborative filtering
-IKNN = 10
+IKNN = 2
+# IKNN = 10
 
 # ubcf: user-based collaborative filtering
-UKNN = 10
+UKNN = 2
+# UKNN = 10
 
 
 # ----------------------------------------------- Attacks -----------------------------------------------
