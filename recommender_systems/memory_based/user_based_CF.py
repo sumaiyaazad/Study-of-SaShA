@@ -1,90 +1,134 @@
-import random
 from utils.data_loader import *
+from utils.notification import *
+from utils.similarity_measures import *
+
 import time
 from tqdm import tqdm
-import numpy as np
-import math as m
 import pandas as pd
-from utils.similarity_measures import *
-import pickle
-from utils.notification import *
 
 
 # implementation of item based collaborative filtering
 
 class UserBasedCF:
 
-    def __init__(self, train_data, user_data, item_data, n_users=None, n_items=None, similarity=cosine_similarity, notification_level=0):
+    def __init__(self, data, similarity_filename, similarity=cosine_similarity, notification_level=0, log=None):
 
-        if n_users is None:
-            self.train_data = train_data
-            # self.test_data = test_data
 
-            self.user_data = user_data
-            self.item_data = item_data
+        """
+        Initialize the UserBasedCF class
+        :param data: train data (train_data, train_users, train_items)
+        :param similarity: similarity measure to use
+        :param similarity_filename: filename to save/load item item similarities
+        :param notification_level: 
+                                    0: no notification, 
+                                    1: notification when training is done and recommendations are saved,
+                                    2: notification whatever verbosed :3
+        :param log: object of class Logger
+        """
 
-            # pandas dataframe unique user and item
-            self.n_users = len(self.user_data['user_id'].unique())
-            self.n_items = len(self.item_data['item_id'].unique())
+        if log is not None:
+            log.append('Creating object of UserBasedCF class')
 
-        else:
-            self.n_users = n_users
-            self.n_items = n_items
-            
-            self.user_data = user_data[:n_users]
-            self.item_data = item_data[:n_items]
-            
-            self.train_data = train_data.loc[train_data['user_id'].isin(self.user_data['user_id']) & train_data['item_id'].isin(self.item_data['item_id'])]
-            # self.test_data = test_data.loc[test_data['user_id'].isin(self.user_data['user_id']) & test_data['item_id'].isin(self.item_data['item_id'])]
-            
+        self.train_data, self.train_users, self.train_items = data
+
+        self.n_users = len(self.train_users['user_id'].unique())
+        self.n_items = len(self.train_items['item_id'].unique())
+
         self.similarity = similarity
         self.userItemMatrix = None
         self.user_user_similarity = None
         self.recommendations = None
-
-        self.save_similarities = None
+        self.similarities_filename = similarity_filename
         self.notification_level = notification_level
+        self.log = log
 
-    def update_save_similarities(self, filename):
-        self.save_similarities = filename
+        self.loadSimilarities()
+
+
+    def update_similarities_filename(self, filename):
+        self.similarities_filename = filename
+
+        if self.log is not None:
+            self.log.append('Similarities filename updated to {}'.format(filename))
 
     def saveSimilarities(self):
-        if self.save_similarities is None:
+        
+        '''
+        Save item item similarities to file
+        (item1, item2, similarity)
+        '''
+
+        if self.log is not None:
+            self.log.append('saving similarities to {} initiated'.format(self.similarities_filename))
+
+        if self.similarities_filename is None:
             print('No filename given to save similarities')
-            return
+            if self.log is not None:
+                self.log.append('No filename given to save similarities')
+                self.log.abort()
+            raise ValueError('No filename given to save similarities')
+
+        if self.user_user_similarity is None:
+            self.getUserUserSimilarity(verbose=True)
 
         print('*'*10, 'Saving similarities...', '*'*10)
 
-        # pickle dump
-        with open(self.save_similarities, 'wb') as handle:
-            pickle.dump(self.user_user_similarity, handle)
+        # convert to list of tuples
+        uusim = []
 
-        
+        for user1 in tqdm(self.train_users['user_id'].unique()):
+            for user2 in self.train_users['user_id'].unique():
+                if user1 != user2:
+                    uusim.append([user1, user2, self.user_user_similarity[user1][user2]])
+
+        # to dataframe
+        uusim = pd.DataFrame(uusim, columns=['user1', 'user2', 'similarity'])
+
         # save as csv
-        # pd.DataFrame(self.user_user_similarity).to_csv(self.save_similarities, index=False)
-        
+        uusim.to_csv(self.similarities_filename, index=False)
+
+        if self.log is not None:
+            self.log.append('Similarities saved to {}'.format(self.similarities_filename))
+
         print('Similarities saved to {}'.format(self.save_similarities))
 
-    def loadSimilarities(self, filename=None):
-        if self.save_similarities is None:
-            if filename is None:
-                print('No filename given to save similarities')
-                return
-            else:
-                self.save_similarities = filename
+
+    def loadSimilarities(self, verbose=False):
+
+        if self.log is not None:
+            self.log.append('Loading similarities initiated')
+
+        if self.similarities_filename is None:
+            print('No filename given to save similarities')
+            if self.log is not None:
+                self.log.append('No filename given to save similarities')
+                self.log.abort()
+            raise ValueError('No filename given to load similarities')
 
         print('*'*10, 'Loading similarities...', '*'*10)
 
-        # load 
-        with open(self.save_similarities, 'rb') as handle:
-            self.user_user_similarity = pickle.load(handle)
-
-        
         # load as csv
-        # self.user_user_similarity = pd.read_csv(self.save_similarities).to_dict()
+        try:
+            uusim_df = pd.read_csv(self.similarities_filename)
+        except FileNotFoundError:
+            print('WARNING:File not found. Similarities will be calculated and saved to {}'.format(self.similarities_filename))
+            if self.log is not None:
+                self.log.append('WARNING:File not found. Similarities will be calculated and saved to {}'.format(self.similarities_filename))
+            self.getUserUserSimilarity(verbose=True)
+            return
+        
+        for user in self.train_users['user_id'].unique():
+            self.user_user_similarity.setdefault(user, {})
+            
+        for user1, user2, sim in tqdm(uusim_df.values):
+            self.user_user_similarity[user1][user2] = sim
+            self.user_user_similarity[user2][user1] = sim
 
-        print('Similarities loaded from {}'.format(self.save_similarities))            
+        if verbose:
+            print('Similarities loaded from {}'.format(self.similarities_filename))
 
+        if self.log is not None:
+            self.log.append('Similarities loaded from {}'.format(self.similarities_filename))     
 
     def getUserItemMatrix(self, verbose=False):
         # create user-item matrix dictionary
@@ -94,7 +138,10 @@ class UserBasedCF:
             print('*'*10, 'Creating user-item matrix...', '*'*10)
             start_time = time.time()
 
-        for user in self.user_data['user_id']:
+        if self.log is not None:
+            self.log.append('Creating user-item matrix initiated')
+
+        for user in self.train_users['user_id']:
             self.userItemMatrix.setdefault(user, {})
 
         for index, datapoint in tqdm(self.train_data.iterrows()):
@@ -108,8 +155,13 @@ class UserBasedCF:
             if self.notification_level >= 2:
                 balloon_tip('SAShA Detection', 'User-item matrix created.')
 
+        if self.log is not None:
+            self.log.append('User-item matrix created. ' + 'Time taken: {:.2f} seconds'.format(time.time() - start_time))
+
     def getUserPairSimilarity(self, user1, user2):
         '''
+        OBSOLETE FUNCTION
+
         Calculate similarity between two users
         this function is not used in the code. slow
         '''
@@ -138,6 +190,9 @@ class UserBasedCF:
         if self.userItemMatrix is None:
             self.getUserItemMatrix(verbose=verbose)
 
+        if self.log is not None:
+            self.log.append('Creating user-user similarity matrix initiated')
+
         # create user-user similarity matrix dictionary
         self.user_user_similarity = {}
 
@@ -145,12 +200,11 @@ class UserBasedCF:
             print('*'*10, 'Creating user-user similarity matrix...', '*'*10)
             start_time = time.time()
 
-        for user1 in tqdm(self.user_data['user_id'].unique()):
+        for user1 in tqdm(self.train_users['user_id'].unique()):
             self.user_user_similarity.setdefault(user1, {})
-            for user2 in self.user_data['user_id'].unique():
+            for user2 in self.train_users['user_id'].unique():
                 if user1 != user2:
                     self.user_user_similarity[user1][user2] = self.similarity(self.userItemMatrix[user1], self.userItemMatrix[user2])
-                    # self.user_user_similarity[user1][user2] = self.getUserPairSimilarity(user1, user2)
                 
         if verbose:
             print('Time taken: {:.2f} seconds'.format(time.time() - start_time))
@@ -159,13 +213,13 @@ class UserBasedCF:
             if self.notification_level >= 2:
                 balloon_tip('SAShA Detection', 'User-user similarity matrix created.')
 
+        if self.log is not None:
+            self.log.append('User-user similarity matrix created. ' + 'Time taken: {:.2f} seconds'.format(time.time() - start_time))
 
-        if self.save_similarities is not None:
-            print('Saving similarities...')
+        if self.similarities_filename is not None:
             self.saveSimilarities()
-            print('Similarities saved.')
 
-    def getRecommendations(self, user_id, n_neighbors=10, verbose=False):
+    def getRecommendations(self, user_id, n_neighbors=10, verbose=False, log_this=False):
 
         if self.user_user_similarity is None:
             self.getUserUserSimilarity(verbose=verbose)
@@ -177,16 +231,12 @@ class UserBasedCF:
             print('*'*10, 'Getting recommendations for user {}...'.format(user_id), '*'*10)
             start_time = time.time()
 
+        if self.log is not None and log_this:
+            self.log.append('Getting recommendations for user {}...'.format(user_id))
+
         # get top k similar users
-        try:
-            top_k_similar_users = sorted(self.user_user_similarity[user_id].items(), key=lambda x: x[1], reverse=True)[:n_neighbors]
-        except:
-            print('debug')
-            print(self.user_user_similarity[user_id].items())
-
-        # top_k_similar_users = sorted(self.user_user_similarity[user_id].items(), key=lambda x: x[1], reverse=True)[:n_neighbors]
-
-        # print('Top {} similar users: {}'.format(n_neighbors, top_k_similar_users))
+        #DEBUG NEEDED MAY BE -- >>>
+        top_k_similar_users = sorted(self.user_user_similarity[user_id].items(), key=lambda x: x[1], reverse=True)[:n_neighbors]
 
         # get items rated by these users
         items_rated_by_similar_users = {}
@@ -221,9 +271,13 @@ class UserBasedCF:
             if self.notification_level >= 1:
                 balloon_tip('SAShA Detection', 'Recommendations for user {} are:'.format(user_id))
 
+        if self.log is not None and log_this:
+            self.log.append('Recommendations for user {} are:'.format(user_id))
+            self.log.append('{}'.format(items_to_recommend))
+
         return items_to_recommend
     
-    def getRecommendationsForAllUsers(self, n_neighbors=10, verbose=False, output_filename='output/recommendations.csv', sep='::', top_n=None):
+    def getRecommendationsForAllUsers(self, n_neighbors=10, verbose=False, output_filename='output/recommendations.csv', sep=',', top_n=None):
 
         if self.user_user_similarity is None:
             self.getUserUserSimilarity(verbose=verbose)
@@ -231,9 +285,12 @@ class UserBasedCF:
         if verbose:
             print('*'*10, 'Getting recommendations for all users...', '*'*10)
             start_time = time.time()
+
+        if self.log is not None:
+            self.log.append('Getting recommendations for all users...')
         
         self.recommendations = {}
-        for user in tqdm(self.user_data['user_id']):
+        for user in tqdm(self.train_users['user_id']):
             self.recommendations[user] = self.getRecommendations(user, n_neighbors=n_neighbors)
         
         if verbose:
@@ -243,9 +300,9 @@ class UserBasedCF:
             if self.notification_level >= 1:
                 balloon_tip('SAShA Detection', 'Recommendations for all users generated') 
 
-        # write to file
-        
-        
+        if self.log is not None:
+            self.log.append('Recommendations for all users generated. ' + 'Time taken: {:.2f} seconds'.format(time.time() - start_time))
+
         # write the recommendation items to file
         if verbose:
             print("Write recommendations to file...")
@@ -258,6 +315,8 @@ class UserBasedCF:
                 for item, rating in items:
                     f.write(str(user) + sep + str(item) + sep + str(rating) + "\n")
 
+        if self.log is not None:
+            self.log.append('Recommendations written to file: {}'.format(output_filename))
         
         return self.recommendations
     

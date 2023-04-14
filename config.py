@@ -1,23 +1,31 @@
 # global
 SEED = 2023
 DATADIR = './data/'
-DATASET = 'ml-1m'
+DATASETS = ['ml-1m']
 OUTDIR = './output/'
 ATTACKS = ['random', 'average']
 RS_MODELS = ['mfcf', 'ibcf', 'ubcf']
-DETECTION = []
+SIMILARITY_MEASURES = ['adjusted_cosine']
+# SIMILARITY_MEASURES = ['cosine', 'jaccard', 'pearson', 'adjusted_cosine']
+EVALUATIONS = ['hit_ratio', 'pred_shift']
+DETECTIONS = []
 TRAIN_SIZE = 0.8
 ATTACK_SIZE_PERCENTAGE = 0.1    # 10% of the target user/item ratings will be attacked
 PUSH = True     # True: push the target user/item rating to the maximum rating, 
                 # False: push the target user/item rating to the minimum rating
 TOP_N = 50      # top-N recommendation
+NUM_TARGET_ITEMS = 50   
 
 rating_range = {
     'ml-1m': (1, 5),
 }
 
-R_MIN, R_MAX = rating_range[DATASET]
-LOG_FILE = OUTDIR + 'log.txt'
+try:
+    R_MIN, R_MAX = rating_range[DATASETS[0]]
+except:
+    R_MIN, R_MAX = 1, 5
+
+LOG_FILE = 'log.txt'
 FILLER_SIZE_PERCENTAGE = 1 # fraction of average number of ratings per user
 
 # ----------------------------------------------- Data Loader -----------------------------------------------

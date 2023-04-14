@@ -11,21 +11,13 @@ import argparse
 def main():
     
     if args.dataset == 'ml-1m':
+        # (data, user_data, item_data), _ = load_data_ml_1M(split=True)
         data, user_data, item_data = load_data_ml_1M()
     else:
         raise ValueError('Dataset not found.')
     
     
     # train_data, test_data = train_test_split(data, test_size=0.02, train_size=0.08)
-
-
-
-    # drop index
-    # train_data = train_data.reset_index(drop=True)
-    # test_data = test_data.reset_index(drop=True)
-    data = data.reset_index(drop=True)
-    user_data = user_data.reset_index(drop=True)
-    item_data = item_data.reset_index(drop=True)
 
     similarity_measure = adjusted_cosine_similarity
 
