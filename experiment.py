@@ -8,24 +8,38 @@
 #   list most unpopular items
 #
 #   choose similarity measure
-#       generate pre-attack similarities
+#       generate pre-attack similarities -> save to file
 #
 #       choose recommender system
-#           generate pre-attack recommendations
-#           calculate pre-attack hit ratio
+#           generate pre-attack recommendations -> save to file
+#           calculate pre-attack hit ratio -> save to result
 #
 #           choose attack
-#               generate attack profiles
-#               generate post-attack similarities
-#               generate post-attack recommendations
-#               calculate post-attack hit ratio
-# 
-#               choose detection method
-#                   generate detected attack profiles
-#                   generate post-detection similarities
-#                   generate post-detection recommendations
-#                   calculate post-detection hit ratio
-#                   calculate detection accuracy
+#               for each attack size (and fixed filler size)
+#                  generate attack profiles -> save to file
+#                  generate post-attack similarities -> save to file
+#                  generate post-attack recommendations -> save to file
+#                  calculate post-attack hit ratio -> save to result
+#                  calculate prediction shift with pre-attack recommendations -> save to result
+#               generate graph of (prediction shift, hit ratio) vs attack size -> save to result
+#               choose best attack size
+#
+#               for each filler size (and best attack size)
+#                  generate attack profiles -> save to file
+#                  generate post-attack similarities -> save to file
+#                  generate post-attack recommendations -> save to file
+#                  calculate post-attack hit ratio -> save to result
+#                  calculate prediction shift with pre-attack recommendations -> save to result
+#               generate graph of (prediction shift, hit ratio) vs filler size -> save to result
+#               choose best filler size 
+#
+#               choose detection method (using best attack and filler size)
+#                   generate detected attack profiles -> save to file
+#                   generate post-detection similarities -> save to file
+#                   generate post-detection recommendations -> save to file
+#                   calculate post-detection hit ratio -> save to result
+#                   calculate prediction shift with pre-attack recommendations -> save to result
+#                   calculate detection accuracy -> save to result
 ####################################################################################################
 
 
