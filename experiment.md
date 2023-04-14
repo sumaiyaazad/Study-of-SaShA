@@ -56,18 +56,25 @@
                         {item_item or user_user}_{similarity measure}.csv
                     post_detection
                         {item_item or user_user}_{similarity measure}.csv
-                recommendations
-                    {recommender system}
+                {recommender system}
+                    recommendations
                         pre_attack_{similarity measure}_recommendations.csv
-                        post_attack_{similarity measure}_recommendations.csv
-                        post_detection_{similarity measure}_recommendations.csv
-                attack_profiles
-                    {attack}_{attack size}_{filler size}.csv
-                    {attack}_{attack size}_{filler size}_detected.csv
-                graphs
-                    {attack}_{attack size}_{filler size}.png
-                    {attack}_{attack size}_{filler size}_detected.png
-                results
-                    {attack}_{attack size}_{filler size}.csv
-                    {attack}_{attack size}_{filler size}_detected.csv
-            
+                        {attack}
+                            post_attack_{similarity measure}_recommendations.csv
+                            attack_size_stat
+                                post_detection_{similarity measure}_{attack size}_{filler size}_recommendations.csv
+                            filler_size_stat
+                                post_detection_{similarity measure}_{attack size}_{filler size}_recommendations.csv
+                            post_detection_{similarity measure}_{attack size}_{filler size}_recommendations.csv
+                    attack_profiles
+                        {attack}_{attack size}_{filler size}.csv
+                        {attack}_{attack size}_{filler size}_detected.csv
+                    graphs
+                        {attack}_attack_size_vs_hit_ratio.png
+                        {attack}_attack_size_vs_pred_shift.png
+                        {attack}_filler_size_vs_hit_ratio.png
+                        {attack}_filler_size_vs_pred_shift.png
+                    results
+                        hit_ratio.csv   : tbd
+                        pred_shift.csv  : tbd
+                
