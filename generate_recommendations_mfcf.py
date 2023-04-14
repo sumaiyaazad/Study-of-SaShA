@@ -6,6 +6,7 @@ from config import *
 import os
 import matplotlib.pyplot as plt
 from utils.notification import *
+from utils.misc import convert_to_matrix
 
 import argparse
 

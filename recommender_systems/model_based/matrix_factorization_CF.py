@@ -5,9 +5,10 @@ from utils.similarity_measures import *
 from tqdm import tqdm
 import time
 from utils.notification import *
+from utils.log import Logger
 
 class MatrixFactorizationCF:
-    def __init__(self, data, users, items, K, alpha, beta, iterations, notification_level=0):
+    def __init__(self, data, users, items, K, alpha, beta, iterations, notification_level=0, log=None):
         """
         Perform matrix factorization to predict empty
         entries in a matrix.
@@ -26,9 +27,12 @@ class MatrixFactorizationCF:
                                         2 = notify when recommendations are generated and when training is complete
         """
 
-        self.data = data
-        self.users = users
-        self.items = items
+        if log is not None:
+            log.append('Creating object of MatrixFactorizationCF class')
+
+        self.train_data = data
+        self.train_users = users
+        self.train_items = items
         self.num_users, self.num_items = len(users), len(items)
         self.K = K
         self.alpha = alpha
@@ -45,15 +49,15 @@ class MatrixFactorizationCF:
 
         self.b_u = np.zeros(self.num_users)
         self.b_i = np.zeros(self.num_items)
-        self.b = np.mean(self.data[np.where(self.data != 0)])
+        self.b = np.mean(self.train_data[np.where(self.train_data != 0)])
 
         # Create a list of training samples
         # (user_index, item_index, rating)
         self.samples = [
-            (i, j, self.data[i, j])
+            (i, j, self.train_data[i, j])
             for i in range(self.num_users)
             for j in range(self.num_items)
-            if self.data[i, j] > 0
+            if self.train_data[i, j] > 0
         ]
 
         # Perform stochastic gradient descent for number of iterations
@@ -85,22 +89,22 @@ class MatrixFactorizationCF:
         """
         A function to compute the total mean square error
         """
-        xs, ys = self.data.nonzero()
+        xs, ys = self.train_data.nonzero()
         predicted = self.full_matrix()
         error = 0
         for x, y in zip(xs, ys):
-            error += pow(self.data[x, y] - predicted[x, y], 2)
+            error += pow(self.train_data[x, y] - predicted[x, y], 2)
         return np.sqrt(error)
     
     def mae(self):
         """
         A function to compute the total mean absolute error
         """
-        xs, ys = self.data.nonzero()
+        xs, ys = self.train_data.nonzero()
         predicted = self.full_matrix()
         error = 0
         for x, y in zip(xs, ys):
-            error += abs(self.data[x, y] - predicted[x, y])
+            error += abs(self.train_data[x, y] - predicted[x, y])
         return error
 
     def sgd(self):
@@ -185,7 +189,7 @@ class MatrixFactorizationCF:
         """
         Save the data matrix to a file
         """
-        df = pd.DataFrame(self.data)
+        df = pd.DataFrame(self.train_data)
         df.to_csv(path, index=False, header=False)
         
     def save_recommendations(self, path, n=10, verbose=False):
@@ -197,13 +201,13 @@ class MatrixFactorizationCF:
             start_time = time.time()
 
         # exchange keys and values in the items dictionary
-        items_rev = {v: k for k, v in self.items.items()}
+        items_rev = {v: k for k, v in self.train_items.items()}
 
         with open(path, "w") as f:
-            for user_id in tqdm(self.users.keys()):
-                items = self.get_recommendations(self.users[user_id], n)
+            for user_id in tqdm(self.train_users.keys()):
+                items = self.get_recommendations(self.train_users[user_id], n)
                 for item in items:
-                    f.write(str(user_id) + "," + str(items_rev[item]) + "," + str(self.get_rating(self.users[user_id], item)) + "\n")
+                    f.write(str(user_id) + "," + str(items_rev[item]) + "," + str(self.get_rating(self.train_users[user_id], item)) + "\n")
 
         if verbose:
             print('*'*10, 'Recommendations saved...', '*'*10)

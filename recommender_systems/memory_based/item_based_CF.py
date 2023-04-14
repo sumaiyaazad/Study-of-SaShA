@@ -232,7 +232,7 @@ class ItemBasedCF:
             
         return items_to_recommend
     
-    def getRecommendationsForAllUsers(self, n_neighbors=10, verbose=False, output_filename='output/recommendations.csv', sep='::', top_n=None):
+    def getRecommendationsForAllUsers(self, n_neighbors=10, verbose=False, output_filename='output/recommendations.csv', sep=',', top_n=None):
 
         if self.item_item_similarity is None:
             self.getItemItemSimilarity(verbose=verbose)

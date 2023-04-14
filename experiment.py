@@ -1,3 +1,35 @@
+
+####################################################################################################
+# experiment flow:
+# 
+# choose dataset
+#   load data
+#   list most popular items
+#   list most unpopular items
+#
+#   choose similarity measure
+#       generate pre-attack similarities
+#
+#       choose recommender system
+#           generate pre-attack recommendations
+#           calculate pre-attack hit ratio
+#
+#           choose attack
+#               generate attack profiles
+#               generate post-attack similarities
+#               generate post-attack recommendations
+#               calculate post-attack hit ratio
+# 
+#               choose detection method
+#                   generate detected attack profiles
+#                   generate post-detection similarities
+#                   generate post-detection recommendations
+#                   calculate post-detection hit ratio
+#                   calculate detection accuracy
+####################################################################################################
+
+
+
 import argparse
 import pandas as pd
 from config import *
@@ -72,19 +104,56 @@ def main():
         if args.log:
             log.append('generated {} unpopular items for dataset {}. Saved in file {}'.format(NUM_TARGET_ITEMS, dataset, dirname + 'unpopular_items_{}.csv'.format(dataset)))
 
+        # choose similarity measure --------------------------------------------------------------------------------------------------------
+        pre_attack_similarities_dir = dirname + 'pre_attack_similarities/'
+        os.makedirs(pre_attack_similarities_dir, exist_ok=True)
 
-        # choose recommender system -------------------------------------------------------------------------------------------------------
-        for rs_model in RS_MODELS:
-            for similarity in SIMILARITY_MEASURES:
+        post_attack_similarities_dir = dirname + 'post_attack_similarities/'
+        os.makedirs(post_attack_similarities_dir, exist_ok=True)
+
+        post_detection_similarities_dir = dirname + 'post_detection_similarities/'
+        os.makedirs(post_detection_similarities_dir, exist_ok=True)
+
+        for similarity in SIMILARITY_MEASURES:
+
+            if similarity == 'cosine':
+                similarity_filename = 'cosine_similarity_{}.csv'.format(dataset)
+            elif similarity == 'pearson':
+                similarity_filename = 'pearson_similarity_{}.csv'.format(dataset)
+            elif similarity == 'adjusted_cosine':
+                similarity_filename = 'adjusted_cosine_similarity_{}.csv'.format(dataset)
+            else:
+                if args.log:
+                    log.append('similarity measure {} not found'.format(similarity))
+                    log.abort()
+
+                noti.balloon_tip('SAShA Detection', 'Similarity measure {} not found. Experiment aborted.'.format(similarity))
+                raise ValueError('Similarity measure not found.')
+            
+            print('Proceeding with similarity measure {}'.format(similarity))
+
+            if args.log:
+                log.append('Proceeding with similarity measure {}'.format(similarity))
+
+            # choose recommender system -----------------------------------------------------------------------------------------------------
+            for rs_model in RS_MODELS:
                 if rs_model == 'ibcf':
-                    from recommender_systems.memory_based import ItemBasedCF as RS
-                    rs = RS(train, test, similarity_measure=similarity, k=IKNN)
+                    from recommender_systems.memory_based.item_based_CF import ItemBasedCF as RS
+                    rs = RS(train, similarity_filename, similarity=similarity, notification_level=0, log=log if args.log else None)
+
+
                 elif rs_model == 'ubcf':
-                    from recommender_systems.memory_based import UserBasedCF as RS
-                    rs = RS(train, test, similarity_measure=similarity, k=UKNN)
-                elif rs_model == 'SVD':
-                    from recommender_systems.model_based import SVD as RS
-                    rs = RS(train, test, k=K)
+                    from recommender_systems.memory_based.user_based_CF import UserBasedCF as RS
+                    rs = RS(train, similarity_filename, similarity=similarity, notification_level=0, log=log if args.log else None)
+
+
+                elif rs_model == 'mfcf':
+                    from recommender_systems.model_based.matrix_factorization_CF import MatrixFactorizationCF as RS
+                    mfcf_train_data, mfcf_train_user, mfcf_train_item = convert_to_matrix(train_data, train_users, train_items)
+
+                    rs = RS(mfcf_train_data, mfcf_train_user, mfcf_train_item, K=K, alpha=ALPHA, beta=BETA, iterations=MAX_ITER, notification_level=0, log=log if args.log else None)
+
+
                 else:
                     if args.log:
                         log.append('recommender system {} not found'.format(rs_model))
@@ -106,3 +175,5 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     main()
+
+

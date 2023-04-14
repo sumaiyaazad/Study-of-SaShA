@@ -37,7 +37,7 @@ SAMPLE_FRAC = 0.25 # randomly sample 25% of the data [ref: https://link.springer
 # ----------------------------------------------- RS models -----------------------------------------------
 # mfcf: matrix factorization
 ALPHA = 0.001
-K = 2
+K = 2   # number of latent features
 BETA = 0.02
 MAX_ITER = 100
 
