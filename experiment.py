@@ -1,19 +1,19 @@
 
 ####################################################################################################
 # experiment flow:
-# 
+
 # choose dataset
 #   load data
 #   list most popular items
 #   list most unpopular items
-#
+
 #   choose similarity measure
 #       generate pre-attack similarities -> save to file
-#
+
 #       choose recommender system
 #           generate pre-attack recommendations -> save to file
 #           calculate pre-attack hit ratio -> save to result
-#
+
 #           choose attack
 #               for each attack size (and fixed filler size)
 #                  generate attack profiles -> save to file
@@ -23,7 +23,7 @@
 #                  calculate prediction shift with pre-attack recommendations -> save to result
 #               generate graph of (prediction shift, hit ratio) vs attack size -> save to result
 #               choose best attack size
-#
+
 #               for each filler size (and best attack size)
 #                  generate attack profiles -> save to file
 #                  generate post-attack similarities -> save to file
@@ -32,7 +32,7 @@
 #                  calculate prediction shift with pre-attack recommendations -> save to result
 #               generate graph of (prediction shift, hit ratio) vs filler size -> save to result
 #               choose best filler size 
-#
+
 #               choose detection method (using best attack and filler size)
 #                   generate detected attack profiles -> save to file
 #                   generate post-detection similarities -> save to file
@@ -42,8 +42,6 @@
 #                   calculate detection accuracy -> save to result
 ####################################################################################################
 
-
-
 import argparse
 import pandas as pd
 from config import *
@@ -52,6 +50,47 @@ import os
 from utils.misc import *
 import utils.notification as noti
 from utils.log import Logger
+
+def generateRecommendations(train, rs_model, similarity, similarity_filename, recommendation_filename, log):
+    """
+    Generate recommendations for all users in the training set
+    param train: training set
+    param rs_model: recommender system model
+    param similarity: similarity measure
+    param similarity_filename: filename of attack similarity
+    param recommendation_filename: filename of storing recommendation result
+    param log: object of Logger class
+    """
+
+    if rs_model == 'ibcf':
+        from recommender_systems.memory_based.item_based_CF import ItemBasedCF as RS
+        rs = RS(train, similarity_filename, similarity=similarity, notification_level=0, log=log if args.log else None)
+        rs.getRecommendationsForAllUsers(n_neighbors=IKNN, verbose=True, output_filename=recommendation_filename, sep=',', top_n=TOP_N)
+
+    elif rs_model == 'ubcf':
+        from recommender_systems.memory_based.user_based_CF import UserBasedCF as RS
+        rs = RS(train, similarity_filename, similarity=similarity, notification_level=0, log=log if args.log else None)
+        rs.getRecommendationsForAllUsers(n_neighbors=UKNN, verbose=True, output_filename=recommendation_filename, sep=',', top_n=TOP_N)
+
+    elif rs_model == 'mfcf':
+        from recommender_systems.model_based.matrix_factorization_CF import MatrixFactorizationCF as RS
+        train_data, train_users, train_items = train
+        mfcf_train_data, mfcf_train_user, mfcf_train_item = convert_to_matrix(train_data, train_users, train_items)
+
+        rs = RS(mfcf_train_data, mfcf_train_user, mfcf_train_item, K=K, alpha=ALPHA, beta=BETA, iterations=MAX_ITER, notification_level=0, log=log if args.log else None)
+
+        rs.train(verbose=True)
+        rs.save_recommendations(output_path=recommendation_filename, n=TOP_N, verbose=True)
+
+    else:
+        if args.log:
+            log.append('recommender system {} not found'.format(rs_model))
+            log.abort()
+        noti.balloon_tip('SAShA Detection', 'Recommender system {} not found. Experiment aborted.'.format(rs_model))
+        raise ValueError('Recommender system not found.')
+    
+    # logging is done outside of this function
+    pass
 
 def main():
 
@@ -93,6 +132,10 @@ def main():
         
         if args.log:
             log.append('dataset {} loaded'.format(dataset))
+
+        # create directory for current dataset
+        currentdir = dirname + dataset + '/'
+        os.makedirs(currentdir, exist_ok=True)
         
         train_data, train_users, train_items = train
 
@@ -106,17 +149,17 @@ def main():
 
         # list most popular items
         popular_items = items_sorted.head(NUM_TARGET_ITEMS)
-        popular_items.to_csv(dirname + 'popular_items_{}.csv'.format(dataset), index=False)
+        popular_items.to_csv(currentdir + '{}_popular_items.csv'.format(NUM_TARGET_ITEMS), index=False)
         print('generated {} popular items for dataset {}'.format(NUM_TARGET_ITEMS, dataset))
         if args.log:
-            log.append('generated {} popular items for dataset {}. Saved in file {}'.format(NUM_TARGET_ITEMS, dataset, dirname + 'popular_items_{}.csv'.format(dataset)))
+            log.append('generated {} popular items for dataset {}. Saved in file {}'.format(NUM_TARGET_ITEMS, dataset, currentdir + '{}_popular_items.csv'.format(NUM_TARGET_ITEMS)))
 
         # list most unpopular items; to be used lates as target items of push attacks
         unpopular_items = items_sorted.tail(NUM_TARGET_ITEMS)
-        unpopular_items.to_csv(dirname + 'unpopular_items_{}.csv'.format(dataset), index=False)
+        unpopular_items.to_csv(currentdir + '{}_unpopular_items.csv'.format(NUM_TARGET_ITEMS), index=False)
         print('generated {} unpopular items for dataset {}'.format(NUM_TARGET_ITEMS, dataset))
         if args.log:
-            log.append('generated {} unpopular items for dataset {}. Saved in file {}'.format(NUM_TARGET_ITEMS, dataset, dirname + 'unpopular_items_{}.csv'.format(dataset)))
+            log.append('generated {} unpopular items for dataset {}. Saved in file {}'.format(NUM_TARGET_ITEMS, dataset, currentdir + '{}_unpopular_items.csv'.format(NUM_TARGET_ITEMS)))
 
         # choose similarity measure --------------------------------------------------------------------------------------------------------
         pre_attack_similarities_dir = dirname + 'pre_attack_similarities/'
@@ -151,29 +194,22 @@ def main():
 
             # choose recommender system -----------------------------------------------------------------------------------------------------
             for rs_model in RS_MODELS:
-                if rs_model == 'ibcf':
-                    from recommender_systems.memory_based.item_based_CF import ItemBasedCF as RS
-                    rs = RS(train, similarity_filename, similarity=similarity, notification_level=0, log=log if args.log else None)
+
+                print('Proceeding with recommender system {}'.format(rs_model))
+                if args.log:
+                    log.append('Proceeding with recommender system {}'.format(rs_model))
+
+                # generate pre-attack recommendations ---------------------------------------------------------------------------------------
+
+                ### directories and filenames creations and definitions
+
+                print('Generating pre-attack recommendations')
+                if args.log:
+                    log.append('Pre-attack recommendations generation initiated')
+
+                generateRecommendations(train, rs_model, similarity, similarity_filename,  log)
 
 
-                elif rs_model == 'ubcf':
-                    from recommender_systems.memory_based.user_based_CF import UserBasedCF as RS
-                    rs = RS(train, similarity_filename, similarity=similarity, notification_level=0, log=log if args.log else None)
-
-
-                elif rs_model == 'mfcf':
-                    from recommender_systems.model_based.matrix_factorization_CF import MatrixFactorizationCF as RS
-                    mfcf_train_data, mfcf_train_user, mfcf_train_item = convert_to_matrix(train_data, train_users, train_items)
-
-                    rs = RS(mfcf_train_data, mfcf_train_user, mfcf_train_item, K=K, alpha=ALPHA, beta=BETA, iterations=MAX_ITER, notification_level=0, log=log if args.log else None)
-
-
-                else:
-                    if args.log:
-                        log.append('recommender system {} not found'.format(rs_model))
-                        log.abort()
-                    noti.balloon_tip('SAShA Detection', 'Recommender system {} not found. Experiment aborted.'.format(rs_model))
-                    raise ValueError('Recommender system not found.')
                 
 
 

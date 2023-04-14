@@ -192,9 +192,12 @@ class MatrixFactorizationCF:
         df = pd.DataFrame(self.train_data)
         df.to_csv(path, index=False, header=False)
         
-    def save_recommendations(self, path, n=10, verbose=False):
+    def save_recommendations(self, output_path, n=10, verbose=False):
         """
         Save the recommendations to a file
+        param output_path: the path to the output file
+        param n: the number of recommendations to save
+        param verbose: if True, print the progress
         """
         if verbose:
             print('*'*10, 'Saving recommendations...', '*'*10)
@@ -203,7 +206,7 @@ class MatrixFactorizationCF:
         # exchange keys and values in the items dictionary
         items_rev = {v: k for k, v in self.train_items.items()}
 
-        with open(path, "w") as f:
+        with open(output_path, "w") as f:
             for user_id in tqdm(self.train_users.keys()):
                 items = self.get_recommendations(self.train_users[user_id], n)
                 for item in items:
