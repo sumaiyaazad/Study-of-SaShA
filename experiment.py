@@ -32,7 +32,8 @@ def generateRecommendations(train, rs_model, similarity, similarities_dir, recom
         if args.log:
             log.append('similarity measure {} not found'.format(similarity))
             log.abort()
-        noti.balloon_tip('SAShA Detection', 'Similarity measure {} not found. Experiment aborted.'.format(similarity))
+        if args.noti_level > 0:
+            noti.balloon_tip('SAShA Detection', 'Similarity measure {} not found. Experiment aborted.'.format(similarity))
         raise ValueError('Similarity measure not found.')
 
     if rs_model == 'ibcf':
@@ -63,7 +64,8 @@ def generateRecommendations(train, rs_model, similarity, similarities_dir, recom
         if args.log:
             log.append('recommender system {} not found'.format(rs_model))
             log.abort()
-        noti.balloon_tip('SAShA Detection', 'Recommender system {} not found. Experiment aborted.'.format(rs_model))
+        if args.noti_level > 0:
+            noti.balloon_tip('SAShA Detection', 'Recommender system {} not found. Experiment aborted.'.format(rs_model))
         raise ValueError('Recommender system not found.')
     
     # logging is done outside of this function
@@ -109,8 +111,8 @@ def main():
             if args.log:
                 log.append('dataset {} not found'.format(dataset))
                 log.abort()
-
-            noti.balloon_tip('SAShA Detection', 'Dataset {} not found. Experiment aborted.'.format(dataset))
+            if args.noti_level > 0:
+                noti.balloon_tip('SAShA Detection', 'Dataset {} not found. Experiment aborted.'.format(dataset))
             raise ValueError('Dataset not found.')
         
         if args.log:
@@ -155,6 +157,7 @@ def main():
         os.makedirs(post_detection_similarities_dir, exist_ok=True)
 
         for similarity in SIMILARITY_MEASURES:
+            bigskip()
             print('Proceeding with similarity measure {}'.format(similarity))
 
             if args.log:
@@ -162,7 +165,7 @@ def main():
 
             # choose recommender system -----------------------------------------------------------------------------------------------------
             for rs_model in RS_MODELS:
-
+                bigskip()
                 print('Proceeding with recommender system {}'.format(rs_model))
                 if args.log:
                     log.append('Proceeding with recommender system {}'.format(rs_model))
@@ -186,16 +189,32 @@ def main():
                 if args.log:
                     log.append('Pre-attack recommendations for {} generated'.format(rs_model))
 
-                noti.balloon_tip('SAShA Detection', 'Pre-attack recommendations for {} generated'.format(rs_model))
+                if args.send_mail:
+                    sendmail(SUBJECT, 'Pre-attack recommendations for generated.\nDataset: {}\nRS: {}\nSimilarity: {}\n'.format(dataset, rs_model, similarity))
+
+                if args.noti_level > 0:
+                    noti.balloon_tip('SAShA Detection', 'Pre-attack recommendations for {} generated'.format(rs_model))
 
                 # calculate pre-attack metrics ----------------------------------------------------------------------------------------------->>> LEFT OFF HERE
                 # post_attack_recommendations_dir = recommendations_dir + attack + '/'
 
-        noti.balloon_tip('SAShA Detection', 'Experiment dataset {} finished. Results are saved in {}'.format(dataset, currentdir))
+        if args.log:
+            log.append('experiment dataset {} finished'.format(dataset))
+
+        if args.send_mail:
+            noti.balloon_tip('SAShA Detection', 'Experiment dataset {} finished. Results are saved in {}'.format(dataset, currentdir))
+
+
+    print('experiment finished')
     
-    noti.balloon_tip('SAShA Detection', 'Experiment finished. Results are saved in {}'.format(dirname))
-
-
+    if args.log:
+        log.append('experiment finished')
+    
+    if args.send_mail:
+        sendmailwithfile(subject=SUBJECT, message='Experiment finished. Results are saved in {}'.format(dirname), filelocation=LOG_FILE, filename='log.txt')
+    
+    if args.noti_level > 0:
+        noti.balloon_tip('SAShA Detection', 'Experiment finished. Results are saved in {}'.format(dirname))
                 
 
 
@@ -204,6 +223,7 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', type=bool, default=True, help='verbose mode')
     parser.add_argument('--noti_level', type=int, default=0, help='notification level, 0: no notification, 1: only at the end, 2: at verbose mode')
     parser.add_argument('--log', type=bool, default=True, help='log mode')
+    parser.add_argument('--send_mail', type=bool, default=True, help='send mail mode')
 
     args = parser.parse_args()
     main()
