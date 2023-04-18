@@ -1,13 +1,13 @@
 # global
 SEED = 2023
 DATADIR = './data/'
-DATASETS = ['dummy']
-# DATASETS = ['dummy', 'ml-1m']
+# DATASETS = ['dummy']
+DATASETS = ['ml-1m']
 OUTDIR = './output/'
 ATTACKS = ['random']
 # ATTACKS = ['random', 'average']
-RS_MODELS = ['mfcf', 'ubcf']
-# RS_MODELS = ['mfcf', 'ibcf', 'ubcf']
+# RS_MODELS = ['mfcf', 'ubcf']
+RS_MODELS = ['mfcf', 'ibcf', 'ubcf']
 SIMILARITY_MEASURES = ['cosine']
 # SIMILARITY_MEASURES = ['cosine', 'jaccard', 'pearson', 'adjusted_cosine']
 EVALUATIONS = ['hit_ratio', 'pred_shift']
@@ -41,17 +41,17 @@ SAMPLE_FRAC = 0.25 # randomly sample 25% of the data [ref: https://link.springer
 # ----------------------------------------------- RS models -----------------------------------------------
 # mfcf: matrix factorization
 ALPHA = 0.001
-K = 2   # number of latent features
+K = 5   # number of latent features
 BETA = 0.02
 MAX_ITER = 100
 
 # ibcf: item-based collaborative filtering
-IKNN = 2
-# IKNN = 10
+# IKNN = 2
+IKNN = 10
 
 # ubcf: user-based collaborative filtering
-UKNN = 2
-# UKNN = 10
+# UKNN = 2
+UKNN = 10
 
 
 # ----------------------------------------------- Attacks -----------------------------------------------

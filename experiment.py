@@ -7,6 +7,7 @@ import os
 from utils.misc import *
 import utils.notification as noti
 from utils.log import Logger
+from utils.sendmail import sendmail, sendmailwithfile
 
 def generateRecommendations(train, rs_model, similarity, similarities_dir, recommendation_filename, log):
     """
@@ -82,7 +83,10 @@ def main():
 
     # experiment result directory
     
-    next_version = np.array([int(name[len('experiment_results_'):]) for name in os.listdir(OUTDIR) if os.path.isdir(os.path.join(OUTDIR, name)) and name.startswith('experiment_results_')]).max() + 1
+    try:
+        next_version = np.array([int(name[len('experiment_results_'):]) for name in os.listdir(OUTDIR) if os.path.isdir(os.path.join(OUTDIR, name)) and name.startswith('experiment_results_')]).max() + 1
+    except ValueError:
+        next_version = 1
 
     dirname = OUTDIR + 'experiment_results_' + str(next_version) + '/'
     print('Experiment result directory: ', dirname)
@@ -164,8 +168,6 @@ def main():
                     log.append('Proceeding with recommender system {}'.format(rs_model))
 
                 # generate pre-attack recommendations ---------------------------------------------------------------------------------------
-
-                ### directories and filenames creations and definitions
                 recommendations_dir = currentdir + rs_model + '/recommendations/'
                 os.makedirs(recommendations_dir, exist_ok=True)
 
@@ -174,10 +176,24 @@ def main():
                     log.append('Pre-attack recommendations generation initiated')
 
                 pre_attack_recommendations_filename = recommendations_dir + 'pre_attack_{}_recommendations.csv'.format(similarity)
-                generateRecommendations(train=train, rs_model=rs_model, similarity=similarity, similarities_dir=pre_attack_similarities_dir, recommendation_filename=pre_attack_recommendations_filename, log=log)
+                generateRecommendations(train=train, 
+                                        rs_model=rs_model, 
+                                        similarity=similarity, 
+                                        similarities_dir=pre_attack_similarities_dir, recommendation_filename=pre_attack_recommendations_filename, 
+                                        log=log)
+                
+                print('Pre-attack recommendations for {} generated'.format(rs_model))
+                if args.log:
+                    log.append('Pre-attack recommendations for {} generated'.format(rs_model))
 
+                noti.balloon_tip('SAShA Detection', 'Pre-attack recommendations for {} generated'.format(rs_model))
 
+                # calculate pre-attack metrics ----------------------------------------------------------------------------------------------->>> LEFT OFF HERE
                 # post_attack_recommendations_dir = recommendations_dir + attack + '/'
+
+        noti.balloon_tip('SAShA Detection', 'Experiment dataset {} finished. Results are saved in {}'.format(dataset, currentdir))
+    
+    noti.balloon_tip('SAShA Detection', 'Experiment finished. Results are saved in {}'.format(dirname))
 
 
                 
