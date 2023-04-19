@@ -8,19 +8,22 @@ import os
 
 class BaseAttack:
 
-    def __init__(self, data, r_max, r_min):
+    def __init__(self, data, r_max, r_min, attack_size_percentage = cfg.ATTACK_SIZE_PERCENTAGE, filler_size_percentage = cfg.FILLER_SIZE_PERCENTAGE, push = cfg.PUSH):
         """
         - data: the dataset
         - r_max: the maximum rating
         - r_min: the minimum rating
+        - attack_size_percentage: the percentage of the dataset to be used for the attack
+        - filler_size_percentage: the percentage of the dataset to be used for the filler
+        - push: whether the attack is push or nuke
         """
         self.data = data
         self.r_max = r_max
         self.r_min = r_min
-        self.target = cfg.PUSH
-        self.attackSizePercentage = cfg.ATTACK_SIZE_PERCENTAGE
-        self.fillerSizePercentage = cfg.FILLER_SIZE_PERCENTAGE
-        self.targetRating = r_max if cfg.PUSH else r_min
+        self.target = push
+        self.attackSizePercentage = attack_size_percentage
+        self.fillerSizePercentage = filler_size_percentage
+        self.targetRating = r_max if push else r_min
         self.fillerRating = int(r_max - r_min)
         self.datasetMean = self.data.rating.mean()
         self.datasetStd = self.data.rating.std()

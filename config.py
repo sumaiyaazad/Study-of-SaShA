@@ -18,6 +18,9 @@ PUSH = True     # True: push the target user/item rating to the maximum rating,
                 # False: push the target user/item rating to the minimum rating
 TOP_N = 50      # top-N recommendation
 TOP_Ns = [10, 20, 30, 40, 50]   # top-N recommendation
+ATTACK_SIZES = [0.01, 0.02, 0.03, 0.04, 0.05] # 1%, 2%, 3%, 4%, 5% of the target user/item ratings will be attacked
+FILLER_SIZES = [0.5, 1, 1.5, 2, 2.5, 3]       # 0.5, 1, 1.5, 2, 2.5, 3 times of the average number of ratings per user
+
 NUM_TARGET_ITEMS = 50   
 
 rating_range = {

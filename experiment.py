@@ -17,6 +17,9 @@ from utils.misc import *
 from utils.log import Logger
 from utils.evaluation import *
 from utils.sendmail import sendmail, sendmailwithfile
+from attacks.base_attack import *
+from attacks.random import *
+from attacks.average import *
 
 
 def load_data(dataset, dirname, all_data, all_currentdir, log):
@@ -344,10 +347,71 @@ def experiment(log, dirname, BREAKPOINT=0):
 # now, we will launch attacks
 
                         # (launch attacks)
-    if BREAKPOINT < 5:  # ------------------------------------------------------------------------------------ breakpoint 5 >>> LEFT OFF HERE
-        print(dirname)
-        print('testing breakpoint')
-        pass 
+    if BREAKPOINT < 5:  # ------------------------------------------------------------------------------------ breakpoint 5
+        for dataset in DATASETS:
+            all_data, all_currentdir, data, currentdir = load_data(dataset, dirname, all_data, all_currentdir, log)
+            
+            train, test = data
+            train_data, train_users, train_items = train
+
+            
+            attack_dir = currentdir + 'attack_profiles/'
+            os.makedirs(attack_dir, exist_ok=True)
+            R_MIN, R_MAX = rating_range[dataset]
+
+            for attack in ATTACKS:
+                for attack_size in ATTACK_SIZES:
+                    for filler_size in FILLER_SIZES:
+
+                        # launch attacks ---------------------------------------------------------------------------------------
+
+                        # {attack}_{attack size}_{filler size}.csv (e.g. random_100_100.csv)
+                        attack_profiles_filename = attack_dir + '{}_{}_{}.csv'.format(attack, attack_size, filler_size)
+
+                        print('Generating {} attack profiles with attack size {} and filler size {} for dataset {}'.format(attack, attack_size, filler_size, dataset))
+                        if args.log:
+                            log.append('Generating {} attack profiles with attack size {} and filler size {} for dataset {}'.format(attack, attack_size, filler_size, dataset))
+
+                        # load target items
+                        target_items = pd.read_csv(currentdir + '{}_unpopular_items.csv'.format(NUM_TARGET_ITEMS))
+                        target_items.columns = ['item_id', 'avg_rating']
+                        target_items = target_items['item_id'].tolist()
+
+                        # create attack object
+                        if attack == 'random':
+                            attack_generator = RandomAttack(train_data, R_MAX, R_MIN, attack_size, filler_size)
+                        elif attack == 'average':
+                            attack_generator = AverageAttack(train_data, R_MAX, R_MIN, attack_size, filler_size)
+                        else:
+                            raise ValueError('Attack not found.')
+
+
+                        # generate attack profiles
+                        attack_generator.generate_profile(target_items, 0, attack_profiles_filename)        # ------->>> LEFT OFF HERE (need to fix this)
+                        # ISSUE: attack_generator.generate_profile() takes 1 target item at a time, but we want to take multiple target items at a time
+                    
+                        print('{} attack profiles with attack size {} and filler size {} for dataset {} generated'.format(attack, attack_size, filler_size, dataset))
+                        if args.log:
+                            log.append('{} attack profiles with attack size {} and filler size {} for dataset {} generated'.format(attack, attack_size, filler_size, dataset))
+
+                        
+
+        if args.send_mail:
+            sendmail(SUBJECT, 'Attacks launched.')
+        
+        BREAKPOINT = 5
+        print('BREAKPOINT 5')
+        bigskip()
+        if args.log:
+            log.append('BREAKPOINT 5')
+            log.append('\n\n\n')
+
+# so far we have launched attacks
+# now, we will calculate the hit ratio of post-attack recommendations
+
+                        # (calculate hit ratio of post-attack recommendations)
+    if BREAKPOINT < 6:  # ------------------------------------------------------------------------------------ breakpoint 6 >>> LEFT OFF HERE
+        pass
 
     pass
 

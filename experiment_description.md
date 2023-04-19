@@ -56,6 +56,9 @@
                         {item_item or user_user}_{similarity measure}.csv
                     post_detection
                         {item_item or user_user}_{similarity measure}.csv
+                attack_profiles
+                    {attack}_{attack size}_{filler size}.csv            > (user, item, rating)
+                    {attack}_{attack size}_{filler size}_detected.csv   > tbd
                 {recommender system}
                     recommendations      
                         pre_attack_{similarity measure}_recommendations.csv          > (user, item, rating)
@@ -66,9 +69,6 @@
                             filler_size_stat
                                 post_attack_{similarity measure}_{attack size}_{filler size}_recommendations.csv
                             post_detection_{similarity measure}_{attack size}_{filler size}_{detection}_recommendations.csv
-                    attack_profiles
-                        {attack}_{attack size}_{filler size}.csv            > tbd
-                        {attack}_{attack size}_{filler size}_detected.csv   > tbd
                     graphs
                         {attack}_attack_size_vs_hit_ratio.png
                         {attack}_attack_size_vs_pred_shift.png

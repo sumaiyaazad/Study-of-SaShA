@@ -9,7 +9,6 @@ import pandas as pd
 from tqdm import tqdm
 import os
 import random
-from ast import literal_eval
 
 
 # Seed For Reproducibility
@@ -19,12 +18,12 @@ random.seed(cfg.SEED)
 
 # shilling attack random attack
 class RandomAttack(BaseAttack):
-    def __init__(self, data, r_max, r_min):
+    def __init__(self, data, r_max, r_min, attack_size_percentage=cfg.ATTACK_SIZE_PERCENTAGE, filler_size_percentage=cfg.FILLER_SIZE_PERCENTAGE, push=cfg.PUSH):
         # drop colums timestamp
         if 'timestamp' in data.columns:
             data = data.drop(columns=['timestamp'])
 
-        super(RandomAttack, self).__init__(data, r_max, r_min)
+        super(RandomAttack, self).__init__(data, r_max, r_min, attack_size_percentage, filler_size_percentage, push)
         self.fillerSize = self.get_filler_size()
         self.selectedSize = self.get_selected_size()
         self.attackSize = self.get_attack_size()

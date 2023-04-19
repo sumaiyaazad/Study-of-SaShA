@@ -10,6 +10,8 @@ def main():
     
     if args.dataset == 'ml-1m':
         data, user_data, item_data = load_data_ml_1M()
+    elif args.dataset == 'dummy':
+        (data, user_data, item_data), _ = load_data_dummy()
     else:
         raise ValueError('Dataset not found.')
     
