@@ -17,6 +17,7 @@ ATTACK_SIZE_PERCENTAGE = 0.1    # 10% of the target user/item ratings will be at
 PUSH = True     # True: push the target user/item rating to the maximum rating, 
                 # False: push the target user/item rating to the minimum rating
 TOP_N = 50      # top-N recommendation
+TOP_Ns = [10, 20, 30, 40, 50]   # top-N recommendation
 NUM_TARGET_ITEMS = 50   
 
 rating_range = {

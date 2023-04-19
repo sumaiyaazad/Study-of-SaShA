@@ -47,34 +47,37 @@
         experiment_results_{exp no.}
             log.txt
             {dataset}
-                {NUM_TARGET_ITEMS}_popular_items.txt
-                {NUM_TARGET_ITEMS}_unpopular_items.txt
+                {NUM_TARGET_ITEMS}_popular_items.txt                > (item, avg_rating)
+                {NUM_TARGET_ITEMS}_unpopular_items.txt              > (item, avg_rating)
                 similarities
                     pre_attack
-                        {item_item or user_user}_{similarity measure}.csv
+                        {item_item or user_user}_{similarity measure}.csv   > (item1, item2, similarity) or (user1, user2, similarity)
                     post_attack
                         {item_item or user_user}_{similarity measure}.csv
                     post_detection
                         {item_item or user_user}_{similarity measure}.csv
                 {recommender system}
-                    recommendations
-                        pre_attack_{similarity measure}_recommendations.csv
+                    recommendations      
+                        pre_attack_{similarity measure}_recommendations.csv          > (user, item, rating)
                         {attack}
                             post_attack_{similarity measure}_recommendations.csv
                             attack_size_stat
-                                post_attack_{similarity measure}_{attack size}_{filler size}_recommendations.csv
+                                post_attack_{similarity measure}_{attack size}_{filler size}_recommendations.csv    
                             filler_size_stat
                                 post_attack_{similarity measure}_{attack size}_{filler size}_recommendations.csv
                             post_detection_{similarity measure}_{attack size}_{filler size}_{detection}_recommendations.csv
                     attack_profiles
-                        {attack}_{attack size}_{filler size}.csv
-                        {attack}_{attack size}_{filler size}_detected.csv
+                        {attack}_{attack size}_{filler size}.csv            > tbd
+                        {attack}_{attack size}_{filler size}_detected.csv   > tbd
                     graphs
                         {attack}_attack_size_vs_hit_ratio.png
                         {attack}_attack_size_vs_pred_shift.png
                         {attack}_filler_size_vs_hit_ratio.png
                         {attack}_filler_size_vs_pred_shift.png
                     results
-                        hit_ratio.csv   : tbd
-                        pred_shift.csv  : tbd
+                        hit_ratio
+                            pre_attack_{similarity measure}_hit_ratio.csv       > (among_first, hit_ratio)
+                            post_attack_{similarity measure}_hit_ratio.csv      > (among_first, hit_ratio, attack_size, filler_size, attack)
+                            post_detection_{similarity measure}_hit_ratio.csv   > (among_first, hit_ratio, attack_size, filler_size, attack, detection)
+                        pred_shift
                 
