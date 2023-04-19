@@ -1,13 +1,62 @@
+# Attempting to decouple the steps of the experiment to make it fail safe
+# things added:
+# - try/except blocks
+# - logging breakpoints when failures occur
+# - restarts from the last successful step
+
 import argparse
 import pandas as pd
+import os
+
 from config import *
+
+import utils.notification as noti
 from utils.data_loader import *
 from utils.similarity_measures import *
-import os
 from utils.misc import *
-import utils.notification as noti
 from utils.log import Logger
+from utils.evaluation import *
 from utils.sendmail import sendmail, sendmailwithfile
+
+global BREAKPOINT
+BREAKPOINT = 0
+
+
+def load_data(dataset, dirname, all_data, all_currentdir, log):
+    """
+    Load dataset
+    param dataset: name of the dataset
+    param dirname: directory name
+    param all_data: dictionary of all datasets
+    param all_currentdir: dictionary of all current directories
+    param log: object of Logger class
+    """
+    
+    # ------------------------------------------------------------------------------------------------ load dataset
+    if dataset in all_data.keys():
+        data = all_data[dataset]
+    elif dataset == 'ml-1m':
+        data = load_data_ml_1M(split=True)
+    elif dataset == 'dummy':
+        data = load_data_dummy()
+    else:
+        if args.log:
+            log.append('dataset {} not found'.format(dataset))
+            log.abort()
+        raise ValueError('Dataset not found.')
+    if args.log:
+        log.append('dataset {} loaded'.format(dataset))
+    all_data[dataset] = data
+
+    # create directory for current dataset
+    if dataset in all_currentdir.keys():
+        currentdir = all_currentdir[dataset]
+    else:
+        currentdir = dirname + dataset + '/'
+        all_currentdir[dataset] = currentdir
+    os.makedirs(currentdir, exist_ok=True)
+
+    return all_data, all_currentdir, data, currentdir
 
 def generateRecommendations(train, rs_model, similarity, similarities_dir, recommendation_filename, log):
     """
@@ -71,6 +120,234 @@ def generateRecommendations(train, rs_model, similarity, similarities_dir, recom
     # logging is done outside of this function
     pass
 
+
+def experiment(log, dirname):
+    """
+    Run experiment
+    param log: object of Logger class
+    param dirname: directory to store experiment results
+    """
+
+                        # (experiment start)
+    if BREAKPOINT < 1:  # ------------------------------------------------------------------------------------ breakpoint 1
+
+        if args.log:
+            log.append('experiment started')
+            log.append('dataset: {}'.format(DATASETS))
+            log.append('recommender system: {}'.format(RS_MODELS))
+            log.append('similarity measure: {}'.format(SIMILARITY_MEASURES))
+            log.append('attack: {}'.format(ATTACKS))
+            log.append('attack impact evaluation metrics: {}'.format(EVALUATIONS))
+            log.append('detection: {}'.format(DETECTIONS))
+            log.append('experiment start time: {}'.format(now()))
+            log.append('experiment result directory: {}'.format(dirname))
+            log.append('Log file: {}'.format(LOG_FILE))
+            log.append('\n\n\n')
+
+        if args.send_mail:
+            sendmail(SUBJECT, 'Experiment started')
+
+
+        BREAKPOINT = 1  
+        print('BREAKPOINT 1')
+        bigskip()
+        if args.log:
+            log.append('BREAKPOINT 1')
+            log.append('\n\n\n')
+
+    else:
+        if args.log:
+            log.append('experiment resumed')
+            log.append('dataset: {}'.format(DATASETS))
+            log.append('recommender system: {}'.format(RS_MODELS))
+            log.append('similarity measure: {}'.format(SIMILARITY_MEASURES))
+            log.append('attack: {}'.format(ATTACKS))
+            log.append('attack impact evaluation metrics: {}'.format(EVALUATIONS))
+            log.append('detection: {}'.format(DETECTIONS))
+            log.append('experiment start time: {}'.format(now()))
+            log.append('experiment result directory: {}'.format(dirname))
+            log.append('Log file: {}'.format(LOG_FILE))
+            log.append('\n\n\n')
+
+        if args.send_mail:
+            sendmail(SUBJECT, 'Experiment resumed')
+
+        BREAKPOINT = 1
+        print('BREAKPOINT 1')
+        bigskip()
+        if args.log:
+            log.append('BREAKPOINT 1')
+            log.append('\n\n\n')
+
+    ####################################### GLOBAL VARIABLES ############################################
+    all_data = {}                                                                                       #      
+    all_currentdir = {}                                                                                 #
+    #####################################################################################################
+
+
+                        # (load data, popular and unpopular items)
+    if BREAKPOINT < 2:  # ------------------------------------------------------------------------------------ breakpoint 2
+        for dataset in DATASETS:
+            # load dataset
+            all_data, all_currentdir, data, currentdir = load_data(dataset, dirname, all_data, all_currentdir, log)
+            
+            train, test = data
+            train_data, train_users, train_items = train
+
+            # sort items by average rating
+            items_sorted = train_data.groupby('item_id')['rating'].mean().to_frame()
+            items_sorted.reset_index(inplace=True)
+            items_sorted = items_sorted.rename(columns = {'index':'item_id', 'rating':'avg_rating'})
+            items_sorted = items_sorted.sort_values(by=['avg_rating'], ascending=False)
+            items_sorted.reset_index(inplace=True)
+            items_sorted = items_sorted.drop(columns=['index'])
+
+            # list most popular items
+            popular_items = items_sorted.head(NUM_TARGET_ITEMS)
+            popular_items.to_csv(currentdir + '{}_popular_items.csv'.format(NUM_TARGET_ITEMS), index=False)
+            print('generated {} popular items for dataset {}'.format(NUM_TARGET_ITEMS, dataset))
+            if args.log:
+                log.append('generated {} popular items for dataset {}. Saved in file {}'.format(NUM_TARGET_ITEMS, dataset, currentdir + '{}_popular_items.csv'.format(NUM_TARGET_ITEMS)))
+
+            # list most unpopular items; to be used lates as target items of push attacks
+            unpopular_items = items_sorted.tail(NUM_TARGET_ITEMS).iloc[::-1]
+            unpopular_items.to_csv(currentdir + '{}_unpopular_items.csv'.format(NUM_TARGET_ITEMS), index=False)
+            print('generated {} unpopular items for dataset {}'.format(NUM_TARGET_ITEMS, dataset))
+            if args.log:
+                log.append('generated {} unpopular items for dataset {}. Saved in file {}'.format(NUM_TARGET_ITEMS, dataset, currentdir + '{}_unpopular_items.csv'.format(NUM_TARGET_ITEMS)))
+
+        BREAKPOINT = 2
+        print('BREAKPOINT 2')
+        bigskip()
+        if args.log:
+            log.append('BREAKPOINT 2')
+            log.append('\n\n\n')
+
+# so far, we have generated the most popular and unpopular items for the dataset
+# now, we will generate pre-attack recommendations for each recommender system
+
+                        # (generate pre-attack recommendations)
+    if BREAKPOINT < 3:  # ------------------------------------------------------------------------------------ breakpoint 3 
+        for dataset in DATASETS:
+            # load dataset
+            all_data, all_currentdir, data, currentdir = load_data(dataset, dirname, all_data, all_currentdir, log)
+            
+            train, test = data
+            train_data, train_users, train_items = train
+
+            # create directory for storing similarities
+            pre_attack_similarities_dir = currentdir + 'similarities/pre_attack/'
+            os.makedirs(pre_attack_similarities_dir, exist_ok=True)
+            if args.log:
+                log.append('created directory {}'.format(pre_attack_similarities_dir))
+
+            post_attack_similarities_dir = currentdir + 'similarities/post_attack/'
+            os.makedirs(post_attack_similarities_dir, exist_ok=True)
+            if args.log:
+                log.append('created directory {}'.format(post_attack_similarities_dir))
+
+            post_detection_similarities_dir = currentdir + 'similarities/post_detection/'
+            os.makedirs(post_detection_similarities_dir, exist_ok=True)
+            if args.log:
+                log.append('created directory {}'.format(post_detection_similarities_dir))
+
+            for similarity in SIMILARITY_MEASURES:
+                for rs_model in RS_MODELS:
+
+                    # generate pre-attack recommendations ---------------------------------------------------------------------------------------
+                    recommendations_dir = currentdir + rs_model + '/recommendations/'
+                    os.makedirs(recommendations_dir, exist_ok=True)
+
+                    print('Generating pre-attack recommendations for {} with {} similarity for dataset {}'.format(rs_model, similarity, dataset))
+                    if args.log:
+                        log.append('Generating pre-attack recommendations for {} with {} similarity for dataset {}'.format(rs_model, similarity, dataset))
+
+
+                    pre_attack_recommendations_filename = recommendations_dir + 'pre_attack_{}_recommendations.csv'.format(similarity)
+                    generateRecommendations(train=train, 
+                                            rs_model=rs_model, 
+                                            similarity=similarity, 
+                                            similarities_dir=pre_attack_similarities_dir, recommendation_filename=pre_attack_recommendations_filename, 
+                                            log=log)
+                    
+                    print('Pre-attack recommendations for {} with {} similarity for dataset {} generated'.format(rs_model, similarity, dataset))
+                    if args.log:
+                        log.append('Pre-attack recommendations for {} with {} similarity for dataset {} generated'.format(rs_model, similarity, dataset))
+
+                    if args.send_mail:
+                        sendmail(SUBJECT, 'Pre-attack recommendations for generated.\nDataset: {}\nRS: {}\nSimilarity: {}\n'.format(dataset, rs_model, similarity))
+
+                    if args.noti_level > 0:
+                        noti.balloon_tip('SAShA Detection', 'Pre-attack recommendations for {} generated'.format(rs_model))
+
+        BREAKPOINT = 3  
+        print('BREAKPOINT 3')
+        bigskip()
+        if args.log:
+            log.append('BREAKPOINT 3')
+            log.append('\n\n\n')
+
+
+# so far we have generated pre-attack recommendations for each recommender system
+# now, we will calculate the hit ratio of the pre-attack recommendations
+
+                        # (calculate hit ratio of pre-attack recommendations)
+    if BREAKPOINT < 4:  # ------------------------------------------------------------------------------------ breakpoint 4 
+        for dataset in DATASETS:
+            
+            if dataset in all_currentdir.keys():
+                currentdir = all_currentdir[dataset]
+            else:
+                currentdir = dirname + dataset + '/'
+                all_currentdir[dataset] = currentdir
+
+            for similarity in SIMILARITY_MEASURES:
+                for rs_model in RS_MODELS:
+
+                    # calculate hit ratio of pre-attack recommendations ---------------------------------------------------------------------------------------
+                    recommendations_dir = currentdir + rs_model + '/recommendations/'
+                    hit_ratio_dir = currentdir + rs_model + '/results/' + 'hit_ratio/'
+                    os.makedirs(hit_ratio_dir, exist_ok=True)
+
+                    print('Calculating hit ratio of pre-attack recommendations for {} with {} similarity for dataset {}'.format(rs_model, similarity, dataset))
+                    if args.log:
+                        log.append('Calculating hit ratio of pre-attack recommendations for {} with {} similarity for dataset {}'.format(rs_model, similarity, dataset))
+
+                    # load target items
+                    target_items = pd.read_csv(currentdir + '{}_unpopular_items.csv'.format(NUM_TARGET_ITEMS))
+                    target_items.columns = ['item_id', 'avg_rating']
+                    target_items = target_items['item_id'].tolist()
+
+                    pre_attack_recommendations_filename = recommendations_dir + 'pre_attack_{}_recommendations.csv'.format(similarity)
+                    pre_attack_hit_ratio = hit_ratio(recommendations_filename = pre_attack_recommendations_filename,
+                                                    target_items = target_items,
+                                                    among_firsts=TOP_Ns,
+                                                    log = log)
+                    
+                    pre_attack_hit_ratio.to_csv(hit_ratio_dir + 'pre_attack_{}_hit_ratio.csv'.format(similarity), index=False)
+                    print('Hit ratio of pre-attack recommendations for {} with {} similarity for dataset {} calculated'.format(rs_model, similarity, dataset))
+                    if args.log:
+                        log.append('Hit ratio of pre-attack recommendations for {} with {} similarity for dataset {} calculated'.format(rs_model, similarity, dataset))
+
+        if args.send_mail:
+            sendmail(SUBJECT, 'Hit ratio of pre-attack recommendations calculated.')
+
+        BREAKPOINT = 4  
+        print('BREAKPOINT 4')
+        bigskip()
+        if args.log:
+            log.append('BREAKPOINT 4')
+            log.append('\n\n\n')
+
+# so far we have calculated the hit ratio of pre-attack recommendations
+# now, we will launch attacks
+
+                        # (launch attacks)
+    if BREAKPOINT < 5:  # ------------------------------------------------------------------------------------ breakpoint 5 >>> LEFT OFF HERE
+        pass 
+
+    pass
+
 def main():
 
     # ------------------------------------------- define experiment environment -------------------------------------------
@@ -90,6 +367,9 @@ def main():
     except ValueError:
         next_version = 1
 
+    if args.version != 0:
+        next_version = args.version
+
     dirname = OUTDIR + 'experiment_results_' + str(next_version) + '/'
     print('Experiment result directory: ', dirname)
     os.makedirs(dirname, exist_ok=True)
@@ -97,113 +377,28 @@ def main():
 
     if args.log:
         LOG_FILE = dirname + 'log.txt'
-
         log = Logger(LOG_FILE)
-        log.append('experiment started')
 
-    for dataset in DATASETS:
-        # load data -----------------------------------------------------------------------------------------------------------------------
-        if dataset == 'ml-1m':
-            train, test = load_data_ml_1M(split=True)
-        elif dataset == 'dummy':
-            train, _ = load_data_dummy()
-        else:
-            if args.log:
-                log.append('dataset {} not found'.format(dataset))
-                log.abort()
-            if args.noti_level > 0:
-                noti.balloon_tip('SAShA Detection', 'Dataset {} not found. Experiment aborted.'.format(dataset))
-            raise ValueError('Dataset not found.')
+
+
+    # ------------------------------------------ starting experiment ------------------------------------------
+    try:
+        experiment(log, dirname)
+    except Exception as e:
+        if args.log:
+            log.append('experiment failed')
+            log.append('error: {}'.format(e))
+            log.abort()
         
-        if args.log:
-            log.append('dataset {} loaded'.format(dataset))
-
-        # create directory for current dataset
-        currentdir = dirname + dataset + '/'
-        os.makedirs(currentdir, exist_ok=True)
-        
-        train_data, train_users, train_items = train
-
-        # sort items by average rating ----------------------------------------------------------------------------------------------------
-        items_sorted = train_data.groupby('item_id')['rating'].mean().to_frame()
-        items_sorted.reset_index(inplace=True)
-        items_sorted = items_sorted.rename(columns = {'index':'item_id', 'rating':'avg_rating'})
-        items_sorted = items_sorted.sort_values(by=['avg_rating'], ascending=False)
-        items_sorted.reset_index(inplace=True)
-        items_sorted = items_sorted.drop(columns=['index'])
-
-        # list most popular items
-        popular_items = items_sorted.head(NUM_TARGET_ITEMS)
-        popular_items.to_csv(currentdir + '{}_popular_items.csv'.format(NUM_TARGET_ITEMS), index=False)
-        print('generated {} popular items for dataset {}'.format(NUM_TARGET_ITEMS, dataset))
-        if args.log:
-            log.append('generated {} popular items for dataset {}. Saved in file {}'.format(NUM_TARGET_ITEMS, dataset, currentdir + '{}_popular_items.csv'.format(NUM_TARGET_ITEMS)))
-
-        # list most unpopular items; to be used lates as target items of push attacks
-        unpopular_items = items_sorted.tail(NUM_TARGET_ITEMS).iloc[::-1]
-        unpopular_items.to_csv(currentdir + '{}_unpopular_items.csv'.format(NUM_TARGET_ITEMS), index=False)
-        print('generated {} unpopular items for dataset {}'.format(NUM_TARGET_ITEMS, dataset))
-        if args.log:
-            log.append('generated {} unpopular items for dataset {}. Saved in file {}'.format(NUM_TARGET_ITEMS, dataset, currentdir + '{}_unpopular_items.csv'.format(NUM_TARGET_ITEMS)))
-
-        # choose similarity measure --------------------------------------------------------------------------------------------------------
-        pre_attack_similarities_dir = currentdir + 'similarities/pre_attack/'
-        os.makedirs(pre_attack_similarities_dir, exist_ok=True)
-
-        post_attack_similarities_dir = currentdir + 'similarities/post_attack/'
-        os.makedirs(post_attack_similarities_dir, exist_ok=True)
-
-        post_detection_similarities_dir = currentdir + 'similarities/post_detection/'
-        os.makedirs(post_detection_similarities_dir, exist_ok=True)
-
-        for similarity in SIMILARITY_MEASURES:
-            bigskip()
-            print('Proceeding with similarity measure {}'.format(similarity))
-
-            if args.log:
-                log.append('Proceeding with similarity measure {}'.format(similarity))
-
-            # choose recommender system -----------------------------------------------------------------------------------------------------
-            for rs_model in RS_MODELS:
-                bigskip()
-                print('Proceeding with recommender system {}'.format(rs_model))
-                if args.log:
-                    log.append('Proceeding with recommender system {}'.format(rs_model))
-
-                # generate pre-attack recommendations ---------------------------------------------------------------------------------------
-                recommendations_dir = currentdir + rs_model + '/recommendations/'
-                os.makedirs(recommendations_dir, exist_ok=True)
-
-                print('Generating pre-attack recommendations')
-                if args.log:
-                    log.append('Pre-attack recommendations generation initiated')
-
-                pre_attack_recommendations_filename = recommendations_dir + 'pre_attack_{}_recommendations.csv'.format(similarity)
-                generateRecommendations(train=train, 
-                                        rs_model=rs_model, 
-                                        similarity=similarity, 
-                                        similarities_dir=pre_attack_similarities_dir, recommendation_filename=pre_attack_recommendations_filename, 
-                                        log=log)
-                
-                print('Pre-attack recommendations for {} generated'.format(rs_model))
-                if args.log:
-                    log.append('Pre-attack recommendations for {} generated'.format(rs_model))
-
-                if args.send_mail:
-                    sendmail(SUBJECT, 'Pre-attack recommendations for generated.\nDataset: {}\nRS: {}\nSimilarity: {}\n'.format(dataset, rs_model, similarity))
-
-                if args.noti_level > 0:
-                    noti.balloon_tip('SAShA Detection', 'Pre-attack recommendations for {} generated'.format(rs_model))
-
-                # calculate pre-attack metrics ----------------------------------------------------------------------------------------------->>> LEFT OFF HERE
-                # post_attack_recommendations_dir = recommendations_dir + attack + '/'
-
-        if args.log:
-            log.append('experiment dataset {} finished'.format(dataset))
-
         if args.send_mail:
-            noti.balloon_tip('SAShA Detection', 'Experiment dataset {} finished. Results are saved in {}'.format(dataset, currentdir))
+            email_body = 'Experiment failed.\r\nError: {}'.format(e)
+            sendmailwithfile(SUBJECT, email_body, 'log.txt', LOG_FILE)
 
+        if args.noti_level > 0:
+            noti.balloon_tip('SAShA Detection', 'Experiment failed. Error: {}'.format(e))
+        raise e
+    
+    # ------------------------------------------ experiment finished ------------------------------------------
 
     print('experiment finished')
     
@@ -211,7 +406,7 @@ def main():
         log.append('experiment finished')
     
     if args.send_mail:
-        sendmailwithfile(subject=SUBJECT, message='Experiment finished. Results are saved in {}'.format(dirname), filelocation=LOG_FILE, filename='log.txt')
+        sendmailwithfile(subject=SUBJECT, message='Experiment finished Successfully. Results are saved in {}'.format(dirname), filelocation=LOG_FILE, filename='log.txt')
     
     if args.noti_level > 0:
         noti.balloon_tip('SAShA Detection', 'Experiment finished. Results are saved in {}'.format(dirname))
@@ -223,9 +418,15 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', type=bool, default=True, help='verbose mode')
     parser.add_argument('--noti_level', type=int, default=0, help='notification level, 0: no notification, 1: only at the end, 2: at verbose mode')
     parser.add_argument('--log', type=bool, default=True, help='log mode')
-    parser.add_argument('--send_mail', type=bool, default=True, help='send mail mode')
+    parser.add_argument('--breakpoint', type=int, default=0, help='breakpoint, 0: no breakpoint, else: left off at breakpoint')
+    parser.add_argument('--version', type=int, default=0, help='experiment version, 0: new experiment, else: old experiment version number')
+
+    parser.add_argument('--send_mail', action='store_true')
+    parser.add_argument('--dont_mail', dest='send_mail', action='store_false')
+    parser.set_defaults(send_mail=True)
 
     args = parser.parse_args()
+
     main()
 
 

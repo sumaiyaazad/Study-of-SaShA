@@ -1,8 +1,8 @@
 # global
 SEED = 2023
 DATADIR = './data/'
-# DATASETS = ['dummy']
-DATASETS = ['ml-1m']
+DATASETS = ['dummy']
+# DATASETS = ['ml-1m']
 OUTDIR = './output/'
 ATTACKS = ['random']
 # ATTACKS = ['random', 'average']

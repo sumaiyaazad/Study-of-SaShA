@@ -37,14 +37,14 @@ def prediction_shift(test_data, verbose=False, log=False):
     return avg_prediction_shift
 
 # hit ratio
-def hit_ratio(recommendations_filename, target_items, amoung_firsts, verbose=False, log=None):
+def hit_ratio(recommendations_filename, target_items, among_firsts, verbose=False, log=None):
     """
     :param recommendations_filename: filename of the recommendations file
     :param target_items: list of target items
     :param verbose: print the hit ratio
     :param log: log the hit ratio, object of the logger class
 
-    :return: pandas dataframe with the hit ratio for each amoung_first
+    :return: pandas dataframe with the hit ratio for each among_first
     """
 
     if verbose:
@@ -61,14 +61,22 @@ def hit_ratio(recommendations_filename, target_items, amoung_firsts, verbose=Fal
 
     tot_users = recommendations.user_id.nunique()
 
-    hit_df = pd.DataFrame(columns=['amoung_first', 'hit_ratio'])
+    hit_df = pd.DataFrame(columns=['among_first', 'hit_ratio'])
 
-    for amoung_first in amoung_firsts:
-        all_hit_counts = grouped.groupby('user_id').head(amoung_first)['item_id'].value_counts()
+    for among_first in among_firsts:
+        all_hit_counts = grouped.groupby('user_id').head(among_first)['item_id'].value_counts()
         filtered_target_items = [item for item in target_items if item in all_hit_counts.index]
         hits = all_hit_counts[filtered_target_items].sum()
-        hit_ratio = hits / tot_users*len(target_items)
-        hit_df.loc[len(hit_df)] = [amoung_first, hit_ratio]
+        hit_ratio = hits / (tot_users*len(target_items))
+        hit_df.loc[len(hit_df)] = [among_first, hit_ratio]
+
+    
+    if verbose:
+        print(hit_df)
+        print("Time: {0}".format(time.time() - start))
+
+    if log is not None:
+        log.append("Hit ratio calculation completed")
     
 
     return hit_df
