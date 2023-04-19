@@ -102,7 +102,9 @@ class ItemBasedCF:
 
         # load as csv
         try:
-            iisim_df = pd.read_csv(self.similarities_filename, header=None, names=['item1', 'item2', 'similarity'])
+            iisim_df = pd.read_csv(self.similarities_filename)
+            iisim_df.columns = ['item1', 'item2', 'similarity']
+            # iisim_df = pd.read_csv(self.similarities_filename, header=None, names=['item1', 'item2', 'similarity'])
         except FileNotFoundError:
             print('WARNING:File not found. Similarities will be calculated and saved to {}'.format(self.similarities_filename))
             if self.log is not None:
@@ -266,7 +268,9 @@ class ItemBasedCF:
         if self.log is not None:
             self.log.append('Writing recommendations to file initiated')
 
+
         with open(output_filename, "w") as f:
+            f.write("user_id" + sep + "item_id" + sep + "rating" + "\n")
             for user, items in self.recommendations.items():
                 if top_n is not None:
                     # sort the items by rating (descending) and then by item id (ascending):    WILL IT WORK?

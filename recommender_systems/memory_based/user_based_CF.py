@@ -109,7 +109,9 @@ class UserBasedCF:
 
         # load as csv
         try:
-            uusim_df = pd.read_csv(self.similarities_filename, header=None, names=['user1', 'user2', 'similarity'])
+            uusim_df = pd.read_csv(self.similarities_filename)
+            uusim_df.columns = ['user1', 'user2', 'similarity']
+            # uusim_df = pd.read_csv(self.similarities_filename, header=None, names=['user1', 'user2', 'similarity'])
         except FileNotFoundError:
             print('WARNING:File not found. Similarities will be calculated and saved to {}'.format(self.similarities_filename))
             if self.log is not None:
@@ -308,6 +310,7 @@ class UserBasedCF:
             print("Write recommendations to file...")
 
         with open(output_filename, "w") as f:
+            f.write("user_id" + sep + "item_id" + sep + "rating" + "\n")
             for user, items in self.recommendations.items():
                 if top_n is not None:
                     items = sorted(items, key=lambda x: x[1], reverse=True)

@@ -207,6 +207,7 @@ class MatrixFactorizationCF:
         items_rev = {v: k for k, v in self.train_items.items()}
 
         with open(output_path, "w") as f:
+            f.write("user_id,item_id,rating\n")
             for user_id in tqdm(self.train_users.keys()):
                 items = self.get_recommendations(self.train_users[user_id], n)
                 for item in items:
