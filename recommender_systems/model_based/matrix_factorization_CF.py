@@ -39,6 +39,7 @@ class MatrixFactorizationCF:
         self.beta = beta
         self.iterations = iterations
         self.notification_level = notification_level
+        self.log = log
 
     def train(self, verbose=False, show_mse=False):
         # Initialize user and item latent feature matrice
@@ -67,6 +68,10 @@ class MatrixFactorizationCF:
             print('*'*10, 'Starting training...', '*'*10)
             start_time = time.time()
 
+        if self.log is not None:
+            self.log.append('Starting training matrix factorization model')
+            start_time = time.time()
+
         for i in tqdm(range(self.iterations)):
             np.random.shuffle(self.samples)
             self.sgd()
@@ -82,6 +87,9 @@ class MatrixFactorizationCF:
             print('Total training time: ', time.time() - start_time)
             if self.notification_level >= 2:
                 balloon_tip('SAShA Detection', 'Training finished')
+
+        if self.log is not None:
+            self.log.append('Finished training matrix factorization model. Total training time: ' + str(time.time() - start_time))
 
         return training_process
 
@@ -203,6 +211,10 @@ class MatrixFactorizationCF:
             print('*'*10, 'Saving recommendations...', '*'*10)
             start_time = time.time()
 
+        if self.log is not None:
+            self.log.append('Saving mfcf recommendations to ' + output_path)
+            start_time = time.time()
+
         # exchange keys and values in the items dictionary
         items_rev = {v: k for k, v in self.train_items.items()}
 
@@ -218,3 +230,6 @@ class MatrixFactorizationCF:
             print('Total saving time: ', time.time() - start_time)
             if self.notification_level >= 1:
                 balloon_tip( 'SAShA Detection','Recommendations for all users generated.')
+
+        if self.log is not None:
+            self.log.append('Finished saving mfcf recommendations. Total saving time: ' + str(time.time() - start_time))

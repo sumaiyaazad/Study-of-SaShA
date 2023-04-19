@@ -119,6 +119,7 @@ class UserBasedCF:
             self.getUserUserSimilarity(verbose=True)
             return
         
+        self.user_user_similarity = {}
         for user in self.train_users['user_id'].unique():
             self.user_user_similarity.setdefault(user, {})
             
@@ -142,6 +143,7 @@ class UserBasedCF:
 
         if self.log is not None:
             self.log.append('Creating user-item matrix initiated')
+            start_time = time.time()
 
         for user in self.train_users['user_id']:
             self.userItemMatrix.setdefault(user, {})
@@ -194,6 +196,7 @@ class UserBasedCF:
 
         if self.log is not None:
             self.log.append('Creating user-user similarity matrix initiated')
+            start_time = time.time()
 
         # create user-user similarity matrix dictionary
         self.user_user_similarity = {}
@@ -290,6 +293,7 @@ class UserBasedCF:
 
         if self.log is not None:
             self.log.append('Getting recommendations for all users...')
+            start_time = time.time()
         
         self.recommendations = {}
         for user in tqdm(self.train_users['user_id']):

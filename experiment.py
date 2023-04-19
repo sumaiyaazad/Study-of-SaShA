@@ -18,9 +18,6 @@ from utils.log import Logger
 from utils.evaluation import *
 from utils.sendmail import sendmail, sendmailwithfile
 
-global BREAKPOINT
-BREAKPOINT = 0
-
 
 def load_data(dataset, dirname, all_data, all_currentdir, log):
     """
@@ -121,17 +118,22 @@ def generateRecommendations(train, rs_model, similarity, similarities_dir, recom
     pass
 
 
-def experiment(log, dirname):
+def experiment(log, dirname, BREAKPOINT=0):
     """
     Run experiment
     param log: object of Logger class
     param dirname: directory to store experiment results
     """
+    print(BREAKPOINT, dirname)
+
+    # return
 
                         # (experiment start)
     if BREAKPOINT < 1:  # ------------------------------------------------------------------------------------ breakpoint 1
 
         if args.log:
+            
+            log.append('\n\n\n')
             log.append('experiment started')
             log.append('dataset: {}'.format(DATASETS))
             log.append('recommender system: {}'.format(RS_MODELS))
@@ -156,8 +158,9 @@ def experiment(log, dirname):
             log.append('\n\n\n')
 
     else:
+
         if args.log:
-            log.append('experiment resumed')
+            log.append('experiment resumed from breakpoint {}'.format(BREAKPOINT))
             log.append('dataset: {}'.format(DATASETS))
             log.append('recommender system: {}'.format(RS_MODELS))
             log.append('similarity measure: {}'.format(SIMILARITY_MEASURES))
@@ -172,18 +175,16 @@ def experiment(log, dirname):
         if args.send_mail:
             sendmail(SUBJECT, 'Experiment resumed')
 
-        BREAKPOINT = 1
-        print('BREAKPOINT 1')
+        print('BREAKPOINT {}'.format(BREAKPOINT))
         bigskip()
         if args.log:
-            log.append('BREAKPOINT 1')
+            log.append('BREAKPOINT {}'.format(BREAKPOINT))
             log.append('\n\n\n')
 
     ####################################### GLOBAL VARIABLES ############################################
     all_data = {}                                                                                       #      
     all_currentdir = {}                                                                                 #
     #####################################################################################################
-
 
                         # (load data, popular and unpopular items)
     if BREAKPOINT < 2:  # ------------------------------------------------------------------------------------ breakpoint 2
@@ -344,6 +345,8 @@ def experiment(log, dirname):
 
                         # (launch attacks)
     if BREAKPOINT < 5:  # ------------------------------------------------------------------------------------ breakpoint 5 >>> LEFT OFF HERE
+        print(dirname)
+        print('testing breakpoint')
         pass 
 
     pass
@@ -367,8 +370,9 @@ def main():
     except ValueError:
         next_version = 1
 
-    if args.version != 0:
+    if args.breakpoint > 0:
         next_version = args.version
+        BREAKPOINT = args.breakpoint
 
     dirname = OUTDIR + 'experiment_results_' + str(next_version) + '/'
     print('Experiment result directory: ', dirname)
@@ -380,10 +384,9 @@ def main():
         log = Logger(LOG_FILE)
 
 
-
     # ------------------------------------------ starting experiment ------------------------------------------
     try:
-        experiment(log, dirname)
+        experiment(log, dirname, BREAKPOINT)
     except Exception as e:
         if args.log:
             log.append('experiment failed')

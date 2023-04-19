@@ -112,7 +112,7 @@ class ItemBasedCF:
             self.getItemItemSimilarity(verbose=True)
             return
 
-        
+        self.item_item_similarity = {}
         for item in self.train_items['item_id'].unique():
             self.item_item_similarity.setdefault(item, {})
             
@@ -136,6 +136,7 @@ class ItemBasedCF:
 
         if self.log is not None:
             self.log.append('Creating item-user matrix initiated')
+            start_time = time.time()
 
         for item in self.train_items['item_id']:
             self.itemUserMatrix.setdefault(item, {})
@@ -161,6 +162,7 @@ class ItemBasedCF:
 
         if self.log is not None:
             self.log.append('Creating item-item similarity matrix initiated')
+            start_time = time.time()
 
         # create item-item similarity matrix dictionary
         self.item_item_similarity = {}
@@ -245,6 +247,7 @@ class ItemBasedCF:
 
         if self.log is not None:
             self.log.append('Getting recommendations for all users initiated')
+            start_time = time.time()
         
         self.recommendations = {}
         for user in tqdm(self.train_users['user_id']):
