@@ -354,19 +354,17 @@ def experiment(log, dirname, BREAKPOINT=0):
             train, test = data
             train_data, train_users, train_items = train
 
-            
-            attack_dir = currentdir + 'attack_profiles/'
-            os.makedirs(attack_dir, exist_ok=True)
-            R_MIN, R_MAX = rating_range[dataset]
-
             for attack in ATTACKS:
+                
+                attack_dir = currentdir + 'attack_profiles/' + attack + '/'
+                os.makedirs(attack_dir, exist_ok=True)
+                R_MIN, R_MAX = rating_range[dataset]
+
+
                 for attack_size in ATTACK_SIZES:
                     for filler_size in FILLER_SIZES:
 
                         # launch attacks ---------------------------------------------------------------------------------------
-
-                        # {attack}_{attack size}_{filler size}.csv (e.g. random_100_100.csv)
-                        attack_profiles_filename = attack_dir + '{}_{}_{}.csv'.format(attack, attack_size, filler_size)
 
                         print('Generating {} attack profiles with attack size {} and filler size {} for dataset {}'.format(attack, attack_size, filler_size, dataset))
                         if args.log:
@@ -387,8 +385,12 @@ def experiment(log, dirname, BREAKPOINT=0):
 
 
                         # generate attack profiles
-                        attack_generator.generate_profile(target_items, 0, attack_profiles_filename)        # ------->>> LEFT OFF HERE (need to fix this)
-                        # ISSUE: attack_generator.generate_profile() takes 1 target item at a time, but we want to take multiple target items at a time
+                        for target_id in tqdm(target_items):
+                            # {target_id}_{attack size}_{filler size}.csv (e.g. random_100_100.csv)
+                            attack_profiles_filename = attack_dir + '{}_{}_{}.csv'.format(target_id, attack_size, filler_size)
+
+                            attack_generator.generate_profile(target_id, 0, attack_profiles_filename)
+                            # ISSUE: attack_generator.generate_profile() takes 1 target item at a time, but we want to take multiple target items at a time
                     
                         print('{} attack profiles with attack size {} and filler size {} for dataset {} generated'.format(attack, attack_size, filler_size, dataset))
                         if args.log:
@@ -407,9 +409,9 @@ def experiment(log, dirname, BREAKPOINT=0):
             log.append('\n\n\n')
 
 # so far we have launched attacks
-# now, we will calculate the hit ratio of post-attack recommendations
+# now, we will generate post-attack recommendations
 
-                        # (calculate hit ratio of post-attack recommendations)
+                        # (generate post-attack recommendations)
     if BREAKPOINT < 6:  # ------------------------------------------------------------------------------------ breakpoint 6 >>> LEFT OFF HERE
         pass
 
@@ -434,6 +436,7 @@ def main():
     except ValueError:
         next_version = 1
 
+    BREAKPOINT = 0
     if args.breakpoint > 0:
         next_version = args.version
         BREAKPOINT = args.breakpoint

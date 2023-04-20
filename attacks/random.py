@@ -28,13 +28,14 @@ class RandomAttack(BaseAttack):
         self.selectedSize = self.get_selected_size()
         self.attackSize = self.get_attack_size()
 
-    def generate_profile(self, target_item_id, sample, output_filename):
+    def generate_profile(self, target_item_id, sample, output_filename, verbose=False):
 
         start_shilling_user_id = max(list(self.data.user_id.unique()))
         # shilling_profiles = pd.DataFrame(columns=list(self.data.columns))
         shilling_profiles = []
 
-        for i in tqdm(range(self.attackSize)):
+        for i in (tqdm(range(self.attackSize)) if verbose else range(self.attackSize)):
+        # for i in tqdm(range(self.attackSize)):
             start_shilling_user_id += 1
 
             # ADD SELECTED: Will Be Empty

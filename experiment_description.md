@@ -57,8 +57,9 @@
                     post_detection
                         {item_item or user_user}_{similarity measure}.csv
                 attack_profiles
-                    {attack}_{attack size}_{filler size}.csv            > (user, item, rating)
-                    {attack}_{attack size}_{filler size}_detected.csv   > tbd
+                    {attack}
+                        {target_id}_{attack size}_{filler size}.csv            > (user, item, rating)
+                        {target_id}_{attack size}_{filler size}_detected.csv   > tbd
                 {recommender system}
                     recommendations      
                         pre_attack_{similarity measure}_recommendations.csv          > (user, item, rating)
