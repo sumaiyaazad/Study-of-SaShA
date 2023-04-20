@@ -53,22 +53,23 @@
                     pre_attack
                         {item_item or user_user}_{similarity measure}.csv   > (item1, item2, similarity) or (user1, user2, similarity)
                     post_attack
-                        {item_item or user_user}_{similarity measure}.csv
+                        {attack}
+                            {item_item or user_user}_{similarity measure}.csv
+                            {item_item or user_user}_{similarity measure}_{attack size}_{filler size}.csv    
+                            {item_item or user_user}_{similarity measure}_{attack size}_{filler size}.csv
                     post_detection
                         {item_item or user_user}_{similarity measure}.csv
                 attack_profiles
                     {attack}
-                        {target_id}_{attack size}_{filler size}.csv            > (user, item, rating)
-                        {target_id}_{attack size}_{filler size}_detected.csv   > tbd
+                        shilling_profiles_{attack size}_{filler size}.csv            > (user, item, rating)
+                        shilling_profiles_{attack size}_{filler size}_detected.csv   > tbd
                 {recommender system}
                     recommendations      
                         pre_attack_{similarity measure}_recommendations.csv          > (user, item, rating)
                         {attack}
                             post_attack_{similarity measure}_recommendations.csv
-                            attack_size_stat
-                                post_attack_{similarity measure}_{attack size}_{filler size}_recommendations.csv    
-                            filler_size_stat
-                                post_attack_{similarity measure}_{attack size}_{filler size}_recommendations.csv
+                            post_attack_{similarity measure}_{attack size}_{filler size}_recommendations.csv    
+                            post_attack_{similarity measure}_{attack size}_{filler size}_recommendations.csv
                             post_detection_{similarity measure}_{attack size}_{filler size}_{detection}_recommendations.csv
                     graphs
                         {attack}_attack_size_vs_hit_ratio.png

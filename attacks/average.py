@@ -70,7 +70,7 @@ class AverageAttack(BaseAttack):
         """
         return []
 
-    def generate_profile(self, target_item_id, sample, output_filename, verbose=False):
+    def generate_profile(self, target_items, sample, output_filename, verbose=False):
 
         # mean of the ratings in the dataset for items
         items_mean = self.data.groupby('item_id')['rating'].mean()
@@ -80,32 +80,32 @@ class AverageAttack(BaseAttack):
         shilling_profiles = []
 
         # for i in tqdm(range(self.attackSize)):
-        for i in (tqdm(range(self.attackSize)) if verbose else range(self.attackSize)):
-            start_shilling_user_id += 1
+        for target_item_id in tqdm(target_items):
+            for i in (tqdm(range(self.attackSize)) if verbose else range(self.attackSize)):
+                start_shilling_user_id += 1
 
-            # ADD SELECTED: Will Be Empty
-            selected_items = self.get_selected_items(target_item_id)
+                # ADD SELECTED: Will Be Empty
+                selected_items = self.get_selected_items(target_item_id)
 
-            # ADD FILLER:   AVERAGE: Mean rating of the filler items in the system
-            filler_items = self.get_filler_items(selected_items, target_item_id)
-            for filler_item_id in filler_items:
+                # ADD FILLER:   AVERAGE: Mean rating of the filler items in the system
+                filler_items = self.get_filler_items(selected_items, target_item_id)
+                for filler_item_id in filler_items:
+                    shilling_profiles.append([
+                        start_shilling_user_id,
+                        filler_item_id,
+                        self.clamp(int(items_mean.loc[filler_item_id]))
+                    ])
+
+                # ADD TARGET ITEM with Rating (Max for Push/mn for Nuke)
                 shilling_profiles.append([
                     start_shilling_user_id,
-                    filler_item_id,
-                    self.clamp(int(items_mean.loc[filler_item_id]))
+                    target_item_id,
+                    self.targetRating
                 ])
-
-            # ADD TARGET ITEM with Rating (Max for Push/mn for Nuke)
-            shilling_profiles.append([
-                start_shilling_user_id,
-                target_item_id,
-                self.targetRating
-            ])
 
         shilling_profiles_df = pd.DataFrame(shilling_profiles, columns=list(self.data.columns))
 
         # Save File Of Shilling Profile in the Directory shilling_profiles
-        # output_filename = "sample_{0}_{1}.csv".format(sample, int(target_item_id))
 
         shilling_profiles_df.to_csv(output_filename, index=False)
 

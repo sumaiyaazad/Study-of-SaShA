@@ -13,13 +13,20 @@ SIMILARITY_MEASURES = ['cosine']
 EVALUATIONS = ['hit_ratio', 'pred_shift']
 DETECTIONS = []
 TRAIN_SIZE = 0.8
-ATTACK_SIZE_PERCENTAGE = 0.1    # 10% of the target user/item ratings will be attacked
 PUSH = True     # True: push the target user/item rating to the maximum rating, 
                 # False: push the target user/item rating to the minimum rating
 TOP_N = 50      # top-N recommendation
 TOP_Ns = [10, 20, 30, 40, 50]   # top-N recommendation
-ATTACK_SIZES = [0.01, 0.02, 0.03, 0.04, 0.05] # 1%, 2%, 3%, 4%, 5% of the target user/item ratings will be attacked
-FILLER_SIZES = [0.5, 1, 1.5, 2, 2.5, 3]       # 0.5, 1, 1.5, 2, 2.5, 3 times of the average number of ratings per user
+
+
+FILLER_SIZE_PERCENTAGE = 1       # fraction of average number of ratings per user
+ATTACK_SIZE_PERCENTAGE = 0.03    # 3% of the target user/item ratings will be attacked
+# ATTACK_SIZES = [0.01, 0.02, 0.03, 0.04, 0.05] # 1%, 2%, 3%, 4%, 5% of the target user/item ratings will be attacked
+# FILLER_SIZES = [0.5, 1, 1.5, 2, 2.5, 3]       # 0.5, 1, 1.5, 2, 2.5, 3 times of the average number of ratings per user
+
+ATTACK_SIZES = [ATTACK_SIZE_PERCENTAGE]
+FILLER_SIZES = [FILLER_SIZE_PERCENTAGE]
+
 
 NUM_TARGET_ITEMS = 50   
 
@@ -34,7 +41,6 @@ except:
     R_MIN, R_MAX = 1, 5
 
 LOG_FILE = 'log.txt'
-FILLER_SIZE_PERCENTAGE = 1 # fraction of average number of ratings per user
 EXP_NO = 0
 
 # ----------------------------------------------- send mail -----------------------------------------------

@@ -58,7 +58,7 @@ def load_data(dataset, dirname, all_data, all_currentdir, log):
 
     return all_data, all_currentdir, data, currentdir
 
-def generateRecommendations(train, rs_model, similarity, similarities_dir, recommendation_filename, log):
+def generateRecommendations(train, rs_model, similarity, similarities_dir, recommendation_filename, log, attack_size=None, filler_size=None):
     """
     Generate recommendations for all users in the training set
     param train: training set
@@ -87,13 +87,14 @@ def generateRecommendations(train, rs_model, similarity, similarities_dir, recom
 
     if rs_model == 'ibcf':
         from recommender_systems.memory_based.item_based_CF import ItemBasedCF as RS
-        similarity_filename = similarities_dir + 'item_item_' + similarity + '.csv'
+        similarity_filename = similarities_dir + 'item_item_' + similarity + ('' if attack_size is None else '_{}'.format(attack_size)) + ('' if filler_size is None else '_{}'.format(filler_size)) + '.csv'
 
         rs = RS(train, similarity_filename, similarity=similarity_function, notification_level=0, log=log if args.log else None)
         rs.getRecommendationsForAllUsers(n_neighbors=IKNN, verbose=True, output_filename=recommendation_filename, sep=',', top_n=TOP_N)
 
     elif rs_model == 'ubcf':
-        similarity_filename = similarities_dir + 'user_user_' + similarity + '.csv'
+        # similarity_filename = similarities_dir + 'user_user_' + similarity + '.csv'
+        similarity_filename = similarities_dir + 'user_user_' + similarity + ('' if attack_size is None else '_{}'.format(attack_size)) + ('' if filler_size is None else '_{}'.format(filler_size)) + '.csv'
 
         from recommender_systems.memory_based.user_based_CF import UserBasedCF as RS
         rs = RS(train, similarity_filename, similarity=similarity_function, notification_level=0, log=log if args.log else None)
@@ -344,9 +345,9 @@ def experiment(log, dirname, BREAKPOINT=0):
             log.append('\n\n\n')
 
 # so far we have calculated the hit ratio of pre-attack recommendations
-# now, we will launch attacks
+# now, we will generate attack profiles
 
-                        # (launch attacks)
+                        # (generate attack profiles)
     if BREAKPOINT < 5:  # ------------------------------------------------------------------------------------ breakpoint 5
         for dataset in DATASETS:
             all_data, all_currentdir, data, currentdir = load_data(dataset, dirname, all_data, all_currentdir, log)
@@ -385,12 +386,16 @@ def experiment(log, dirname, BREAKPOINT=0):
 
 
                         # generate attack profiles
-                        for target_id in tqdm(target_items):
-                            # {target_id}_{attack size}_{filler size}.csv (e.g. random_100_100.csv)
-                            attack_profiles_filename = attack_dir + '{}_{}_{}.csv'.format(target_id, attack_size, filler_size)
+                        # for target_id in tqdm(target_items):
+                        #     # {target_id}_{attack size}_{filler size}.csv (e.g. random_100_100.csv)
+                        #     attack_profiles_filename = attack_dir + '{}_{}_{}.csv'.format(target_id, attack_size, filler_size)
 
-                            attack_generator.generate_profile(target_id, 0, attack_profiles_filename)
-                            # ISSUE: attack_generator.generate_profile() takes 1 target item at a time, but we want to take multiple target items at a time
+                        #     attack_generator.generate_profile(target_id, 0, attack_profiles_filename)
+                            # ISSUE: attack_generator.generate_profile() takes 1 target item at a time, but we want to take multiple target items at a time FIXED
+
+                        # generate attack profiles
+                        attack_profiles_filename = attack_dir + 'shilling_profiles_{}_{}.csv'.format(attack_size, filler_size)
+                        attack_generator.generate_profile(target_items, 0, attack_profiles_filename)
                     
                         print('{} attack profiles with attack size {} and filler size {} for dataset {} generated'.format(attack, attack_size, filler_size, dataset))
                         if args.log:
@@ -399,7 +404,7 @@ def experiment(log, dirname, BREAKPOINT=0):
                         
 
         if args.send_mail:
-            sendmail(SUBJECT, 'Attacks launched.')
+            sendmail(SUBJECT, 'All attack profiles generated.')
         
         BREAKPOINT = 5
         print('BREAKPOINT 5')
@@ -408,11 +413,93 @@ def experiment(log, dirname, BREAKPOINT=0):
             log.append('BREAKPOINT 5')
             log.append('\n\n\n')
 
-# so far we have launched attacks
-# now, we will generate post-attack recommendations
+# so far we have generated attack profiles
+# now, we will generate post-attack recommendations for fixed attack_size and fixed filler_size
 
                         # (generate post-attack recommendations)
-    if BREAKPOINT < 6:  # ------------------------------------------------------------------------------------ breakpoint 6 >>> LEFT OFF HERE
+    if BREAKPOINT < 6:  # ------------------------------------------------------------------------------------ breakpoint 6
+        for dataset in DATASETS:
+            all_data, all_currentdir, data, currentdir = load_data(dataset, dirname, all_data, all_currentdir, log)
+            
+            train, test = data
+            train_data, train_users, train_items = train
+
+            for similarity in SIMILARITY_MEASURES:
+                for rs_model in RS_MODELS:
+                    for attack in ATTACKS:
+                        for attack_size in ATTACK_SIZES:
+                            for filler_size in FILLER_SIZES:
+
+                                # fetch target items
+                                target_items = pd.read_csv(currentdir + '{}_unpopular_items.csv'.format(NUM_TARGET_ITEMS))
+                                target_items.columns = ['item_id', 'avg_rating']
+                                target_items = target_items['item_id'].tolist()
+
+                                # fetch attack profiles for all target items
+                                attack_dir = currentdir + 'attack_profiles/' + attack + '/'
+                                attack_profiles = pd.DataFrame()
+                                attack_profile = pd.read_csv(attack_dir + 'shilling_profiles_{}_{}.csv'.format(attack_size, filler_size))
+                                attack_profiles = pd.concat([attack_profiles, attack_profile], ignore_index=True)
+                                attack_profiles = attack_profiles[['user_id', 'item_id', 'rating']]
+                                attack_profiles.columns = ['user_id', 'item_id', 'rating']
+
+                                # concat attack data with train data
+                                new_train_data = pd.concat([train_data, attack_profiles], ignore_index=True)
+                                
+                                # concat attack users with train users
+                                temp = pd.DataFrame(attack_profiles.user_id.unique())
+                                temp.columns = ['user_id']
+                                new_train_users = train_users.copy()
+                                new_train_users = pd.concat([new_train_users, temp], ignore_index=True)
+
+                                # similarity files directory and filenames defination
+                                similarity_dir = currentdir + 'similarities/' + 'post_attack/' + attack + '/'
+                                os.makedirs(similarity_dir, exist_ok=True)
+
+                                # recommendations directory and filenames defination
+                                recommendations_dir = currentdir + rs_model + '/recommendations/' + attack + '/'
+                                os.makedirs(recommendations_dir, exist_ok=True)
+                                recommendations_filename = recommendations_dir + 'post_attack_{}_{}_{}_recommendations.csv'.format(similarity, attack_size, filler_size)
+
+                                # generate post-attack recommendations
+                                print('Generating post-attack recommendations for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
+                                if args.log:
+                                    log.append('Generating post-attack recommendations for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
+
+                                bigskip()
+                                print('debug', new_train_users.shape, train_users.shape)
+                                bigskip()
+
+                                generateRecommendations((new_train_data, new_train_users, train_items),
+                                                        rs_model,
+                                                        similarity,
+                                                        similarity_dir,
+                                                        recommendations_filename,
+                                                        log,
+                                                        attack_size,
+                                                        filler_size)
+
+                                print('Post-attack recommendations generated for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
+                                if args.log:
+                                    log.append('Post-attack recommendations generated for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
+                                if args.send_mail:
+                                    sendmail(SUBJECT, 'Post-attack recommendations generated for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
+
+        if args.send_mail:
+            sendmail(SUBJECT, 'Post attack Recommendations generated.')
+
+        BREAKPOINT = 6
+        print('BREAKPOINT 6')
+        bigskip()
+        if args.log:
+            log.append('BREAKPOINT 6')
+            log.append('\n\n\n')
+
+# so far we have generated post-attack recommendations
+# now, we will evaluate attack impact
+
+                        # (evaluate attack impact)  
+    if BREAKPOINT < 7:  # ------------------------------------------------------------------------------------ breakpoint 7
         pass
 
     pass

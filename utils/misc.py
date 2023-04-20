@@ -16,6 +16,11 @@ def convert_to_matrix(data, users, items):
     for matrix factorization
     """
 
+    # reset the index
+    users = users.reset_index(drop=True)
+    items = items.reset_index(drop=True)
+    data = data.reset_index(drop=True)
+
     users_dict = {k: v for v, k in enumerate(users['user_id'].tolist())}
     items_dict = {k: v for v, k in enumerate(items['item_id'].tolist())}
 
