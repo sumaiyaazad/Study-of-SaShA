@@ -1,12 +1,7 @@
-# Attempting to decouple the steps of the experiment to make it fail safe
-# things added:
-# - try/except blocks
-# - logging breakpoints when failures occur
-# - restarts from the last successful step
-
 import argparse
 import pandas as pd
 import os
+import matplotlib.pyplot as plt
 
 from config import *
 
@@ -20,6 +15,7 @@ from utils.sendmail import sendmail, sendmailwithfile
 from attacks.base_attack import *
 from attacks.random import *
 from attacks.average import *
+
 
 
 def load_data(dataset, dirname, all_data, all_currentdir, log):
@@ -430,6 +426,9 @@ def experiment(log, dirname, BREAKPOINT=0):
                         for attack_size in ATTACK_SIZES:
                             for filler_size in FILLER_SIZES:
 
+                                if (attack_size != ATTACK_SIZE_PERCENTAGE) and (filler_size != FILLER_SIZE_PERCENTAGE):
+                                    continue
+
                                 # fetch target items
                                 target_items = pd.read_csv(currentdir + '{}_unpopular_items.csv'.format(NUM_TARGET_ITEMS))
                                 target_items.columns = ['item_id', 'avg_rating']
@@ -466,9 +465,6 @@ def experiment(log, dirname, BREAKPOINT=0):
                                 if args.log:
                                     log.append('Generating post-attack recommendations for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
 
-                                bigskip()
-                                print('debug', new_train_users.shape, train_users.shape)
-                                bigskip()
 
                                 generateRecommendations((new_train_data, new_train_users, train_items),
                                                         rs_model,
@@ -479,14 +475,16 @@ def experiment(log, dirname, BREAKPOINT=0):
                                                         attack_size,
                                                         filler_size)
 
-                                print('Post-attack recommendations generated for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
-                                if args.log:
-                                    log.append('Post-attack recommendations generated for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
-                                if args.send_mail:
-                                    sendmail(SUBJECT, 'Post-attack recommendations generated for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
+                                # print('Post-attack recommendations generated for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
+                                # if args.log:
+                                #     log.append('Post-attack recommendations generated for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
+                                # if args.send_mail:
+                                #     sendmail(SUBJECT, 'Post-attack recommendations generated for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
 
-        if args.send_mail:
-            sendmail(SUBJECT, 'Post attack Recommendations generated.')
+                    print('Post attack Recommendations generated for dataset {}, similarity measure {}, recommender system {}'.format(dataset, similarity, rs_model))
+                    if args.send_mail:
+                        sendmail(SUBJECT, 'Post attack Recommendations generated for dataset {}, similarity measure {}, recommender system {}'.format(dataset, similarity, rs_model))
+
 
         BREAKPOINT = 6
         print('BREAKPOINT 6')
@@ -496,13 +494,132 @@ def experiment(log, dirname, BREAKPOINT=0):
             log.append('\n\n\n')
 
 # so far we have generated post-attack recommendations
-# now, we will evaluate attack impact
+# now, we will calculate hit ratio and generate graphs
 
-                        # (evaluate attack impact)  
+                        # (calculate hit ratio and generate graphs)
     if BREAKPOINT < 7:  # ------------------------------------------------------------------------------------ breakpoint 7
-        pass
+        for dataset in DATASETS:
+            if dataset in all_currentdir.keys():
+                currentdir = all_currentdir[dataset]
+            else:
+                currentdir = dirname + dataset + '/'
+                all_currentdir[dataset] = currentdir
+
+            for similarity in SIMILARITY_MEASURES:
+                for rs_model in RS_MODELS:
+
+                    # calculate hit ratio of post-attack recommendations ---------------------------------------------------------------------------------------
+                    recommendations_dir = currentdir + rs_model + '/recommendations/'
+                    hit_ratio_dir = currentdir + rs_model + '/results/' + 'hit_ratio/'
+                    os.makedirs(hit_ratio_dir, exist_ok=True)
+
+                    print('Calculating hit ratio of post-attack recommendations for {} with {} similarity for dataset {}'.format(rs_model, similarity, dataset))
+                    if args.log:
+                        log.append('Calculating hit ratio of post-attack recommendations for {} with {} similarity for dataset {}'.format(rs_model, similarity, dataset))
+
+                    # load target items
+                    target_items = pd.read_csv(currentdir + '{}_unpopular_items.csv'.format(NUM_TARGET_ITEMS))
+                    target_items.columns = ['item_id', 'avg_rating']
+                    target_items = target_items['item_id'].tolist()
+
+                    # for every attack, attack size and filler size, calculate hit ratio 
+                    # concatenate in one dataframe and save to csv
+                    
+                    
+                    hit_ratios = pd.DataFrame(columns = ['attack', 'attack_size', 'filler_size', 'hit_ratio'])
+
+                    for attack in ATTACKS:
+                        for attack_size in ATTACK_SIZES:
+                            for filler_size in FILLER_SIZES:
+                                post_attack_recommendations_filename = recommendations_dir + attack + '/post_attack_{}_{}_{}_recommendations.csv'.format(similarity, attack_size, filler_size)
+                                post_attack_hit_ratio = hit_ratio(recommendations_filename = post_attack_recommendations_filename,
+                                                                target_items = target_items,
+                                                                among_firsts=TOP_Ns,
+                                                                log = log)
+                                post_attack_hit_ratio['attack'] = attack
+                                post_attack_hit_ratio['attack_size'] = attack_size
+                                post_attack_hit_ratio['filler_size'] = filler_size
+                                hit_ratios = pd.concat([hit_ratios, post_attack_hit_ratio], ignore_index=True)
+
+
+                    hit_ratio_filename = hit_ratio_dir + 'post_attack_{}_hit_ratio.csv'.format(similarity)
+                    hit_ratios.to_csv(hit_ratio_filename, index=False)
+
+                    if args.log:
+                        log.append('Hit ratio of post-attack recommendations calculated for {} with {} similarity for dataset {}'.format(rs_model, similarity, dataset))
+                        log.append('Hit ratio of post-attack recommendations saved to {}'.format(hit_ratio_filename))
+
+                    print('Hit ratio of post-attack recommendations calculated for {} with {} similarity for dataset {}'.format(rs_model, similarity, dataset))
+
+                    # generate graphs   hit ratio vs attack size, fixed filler size
+                    if args.log:
+                        log.append('Generating graphs for hit ratio vs attack size, fixed filler size for {} with {} similarity for dataset {}'.format(rs_model, similarity, dataset))
+
+                    graph_dir = currentdir + rs_model + '/graphs/'
+                    os.makedirs(graph_dir, exist_ok=True)
+                    
+                    attack_size_hit_ratios = hit_ratios[hit_ratios['filler_size'] == FILLER_SIZE_PERCENTAGE]
+                    for attack in ATTACKS:
+                        graph_filename = graph_dir + '{}_attack_size_vs_hit_ratio.png'.format(attack)
+
+                        # filter hit ratios for current attack
+                        attack_hit_ratio = attack_size_hit_ratios[attack_size_hit_ratios['attack'] == attack]
+
+                        for top_n in TOP_Ns:
+                            # filter hit ratios for current top_n
+                            current_hit_ratios_for_topn = attack_hit_ratio[attack_hit_ratio['among_first'] == top_n]  # top_n is  among_first
+                            plt.plot(ATTACK_SIZES, current_hit_ratios_for_topn['hit_ratio'].to_list(), label='top {}'.format(top_n))
+                        plt.axis('tight')
+                        plt.legend()
+                        plt.title('{} attack, {} similarity, filler size {}'.format(attack, similarity, FILLER_SIZE_PERCENTAGE))
+                        plt.xlabel('Attack size')
+                        plt.ylabel('Hit ratio')
+                        plt.savefig(graph_filename)
+                        plt.clf()
+
+
+                    # generate graphs   hit ratio vs filler size, fixed attack size
+                    if args.log:
+                        log.append('Generating graphs for hit ratio vs filler size, fixed attack size for {} with {} similarity for dataset {}'.format(rs_model, similarity, dataset))
+                    filler_hit_ratios = hit_ratios[hit_ratios['attack_size'] == ATTACK_SIZE_PERCENTAGE]
+                    for attack in ATTACKS:
+                        graph_filename = graph_dir + '{}_filler_size_vs_hit_ratio.png'.format(attack)
+
+                        # filter hit ratios for current attack
+                        current_hit_ratios = filler_hit_ratios[filler_hit_ratios['attack'] == attack]
+
+                        for top_n in TOP_Ns:
+                            # filter hit ratios for current top_n
+                            current_hit_ratios_for_topn = current_hit_ratios[current_hit_ratios['among_first'] == top_n]  # top_n is  among_first
+
+                            plt.plot(FILLER_SIZES, current_hit_ratios_for_topn['hit_ratio'].to_list(), label='top {}'.format(top_n))
+                        plt.axis('tight')
+                        plt.legend()
+                        plt.title('{} attack, {} similarity, attack size {}'.format(attack, similarity, ATTACK_SIZE_PERCENTAGE))
+                        plt.xlabel('Filler size')
+                        plt.ylabel('Hit ratio')
+                        plt.savefig(graph_filename)
+                        plt.clf()
+
+        if args.send_mail:
+            sendmail(SUBJECT, 'Evaluations done for post-attack recommendations')
+
+        BREAKPOINT = 7
+        print('BREAKPOINT 7')
+        bigskip()
+        if args.log:
+            log.append('BREAKPOINT 7')
+            log.append('\n\n\n')
+
+# so far, we have calculated hit ratio for post-attack recommendations
+# now, we will calculate hit ratio for post-detection recommendations
 
     pass
+
+
+
+
+                    
 
 def main():
 
