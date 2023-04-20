@@ -531,6 +531,10 @@ def experiment(log, dirname, BREAKPOINT=0):
                     for attack in ATTACKS:
                         for attack_size in ATTACK_SIZES:
                             for filler_size in FILLER_SIZES:
+
+                                if (attack_size != ATTACK_SIZE_PERCENTAGE) and (filler_size != FILLER_SIZE_PERCENTAGE):
+                                    continue
+
                                 post_attack_recommendations_filename = recommendations_dir + attack + '/post_attack_{}_{}_{}_recommendations.csv'.format(similarity, attack_size, filler_size)
                                 post_attack_hit_ratio = hit_ratio(recommendations_filename = post_attack_recommendations_filename,
                                                                 target_items = target_items,
