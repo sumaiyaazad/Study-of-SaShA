@@ -6,6 +6,10 @@
         -list most popular items
         -list most unpopular items
 
+        - for each target item
+            -choose similarity measure
+            -generate similar items : save to file
+
         -choose similarity measure
             -generate pre-attack similarities : save to file
 
@@ -47,8 +51,10 @@
         experiment_results_{exp no.}
             log.txt
             {dataset}
-                {NUM_TARGET_ITEMS}_popular_items.txt                > (item, avg_rating)
-                {NUM_TARGET_ITEMS}_unpopular_items.txt              > (item, avg_rating)
+                {NUM_TARGET_ITEMS}_popular_items.csv                > (item, avg_rating)
+                {NUM_TARGET_ITEMS}_unpopular_items.csv              > (item, avg_rating)
+                similar_items_target
+                    {item_id}_{similarity measure}.csv               > (item, similarity)
                 similarities
                     pre_attack
                         {item_item or user_user}_{similarity measure}.csv   > (item1, item2, similarity) or (user1, user2, similarity)

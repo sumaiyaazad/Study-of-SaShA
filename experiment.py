@@ -16,6 +16,10 @@ from attacks.base_attack import *
 from attacks.random import *
 from attacks.average import *
 
+from recommender_systems.memory_based.item_based_CF import ItemBasedCF
+from recommender_systems.memory_based.user_based_CF import UserBasedCF
+from recommender_systems.model_based.matrix_factorization_CF import MatrixFactorizationCF
+
 
 
 def load_data(dataset, dirname, all_data, all_currentdir, log):
@@ -82,26 +86,22 @@ def generateRecommendations(train, rs_model, similarity, similarities_dir, recom
         raise ValueError('Similarity measure not found.')
 
     if rs_model == 'ibcf':
-        from recommender_systems.memory_based.item_based_CF import ItemBasedCF as RS
         similarity_filename = similarities_dir + 'item_item_' + similarity + ('' if attack_size is None else '_{}'.format(attack_size)) + ('' if filler_size is None else '_{}'.format(filler_size)) + '.csv'
 
-        rs = RS(train, similarity_filename, similarity=similarity_function, notification_level=0, log=log if args.log else None)
+        rs = ItemBasedCF(train, similarity_filename, similarity=similarity_function, notification_level=0, log=log if args.log else None)
         rs.getRecommendationsForAllUsers(n_neighbors=IKNN, verbose=True, output_filename=recommendation_filename, sep=',', top_n=TOP_N)
 
     elif rs_model == 'ubcf':
-        # similarity_filename = similarities_dir + 'user_user_' + similarity + '.csv'
         similarity_filename = similarities_dir + 'user_user_' + similarity + ('' if attack_size is None else '_{}'.format(attack_size)) + ('' if filler_size is None else '_{}'.format(filler_size)) + '.csv'
 
-        from recommender_systems.memory_based.user_based_CF import UserBasedCF as RS
-        rs = RS(train, similarity_filename, similarity=similarity_function, notification_level=0, log=log if args.log else None)
+        rs = UserBasedCF(train, similarity_filename, similarity=similarity_function, notification_level=0, log=log if args.log else None)
         rs.getRecommendationsForAllUsers(n_neighbors=UKNN, verbose=True, output_filename=recommendation_filename, sep=',', top_n=TOP_N)
 
     elif rs_model == 'mfcf':
-        from recommender_systems.model_based.matrix_factorization_CF import MatrixFactorizationCF as RS
         train_data, train_users, train_items = train
         mfcf_train_data, mfcf_train_user, mfcf_train_item = convert_to_matrix(train_data, train_users, train_items)
 
-        rs = RS(mfcf_train_data, mfcf_train_user, mfcf_train_item, K=K, alpha=ALPHA, beta=BETA, iterations=MAX_ITER, notification_level=0, log=log if args.log else None)
+        rs = MatrixFactorizationCF(mfcf_train_data, mfcf_train_user, mfcf_train_item, K=K, alpha=ALPHA, beta=BETA, iterations=MAX_ITER, notification_level=0, log=log if args.log else None)
 
         rs.train(verbose=True)
         rs.save_recommendations(output_path=recommendation_filename, n=TOP_N, verbose=True)
@@ -186,7 +186,7 @@ def experiment(log, dirname, BREAKPOINT=0):
     all_currentdir = {}                                                                                 #
     #####################################################################################################
 
-                        # (load data, popular and unpopular items)
+                        # (load data, popular and unpopular items, target items similarity)
     if BREAKPOINT < 2:  # ------------------------------------------------------------------------------------ breakpoint 2
         for dataset in DATASETS:
             # load dataset
@@ -216,6 +216,15 @@ def experiment(log, dirname, BREAKPOINT=0):
             print('generated {} unpopular items for dataset {}'.format(NUM_TARGET_ITEMS, dataset))
             if args.log:
                 log.append('generated {} unpopular items for dataset {}. Saved in file {}'.format(NUM_TARGET_ITEMS, dataset, currentdir + '{}_unpopular_items.csv'.format(NUM_TARGET_ITEMS)))
+
+
+            # generate list of items similar to target items (unpopular) using knowledge graph
+            target_items = unpopular_items['item_id'].tolist()
+
+            # create directory for storing similarities
+            target_similar_dir = currentdir + 'similar_items_target/'
+            os.makedirs(target_similar_dir, exist_ok=True)
+            
 
         BREAKPOINT = 2
         print('BREAKPOINT 2')

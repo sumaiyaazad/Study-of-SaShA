@@ -3,6 +3,7 @@ SEED = 2023
 DATADIR = './data/'
 # DATASETS = ['dummy']
 DATASETS = ['ml-1m']
+# DATASETS = ['yahoo_movies', 'SmallLibraryThing']
 OUTDIR = './output/'
 # ATTACKS = ['random']
 ATTACKS = ['random', 'average']

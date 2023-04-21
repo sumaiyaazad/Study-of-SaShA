@@ -84,3 +84,48 @@ def load_data_dummy():
     items.columns = ['item_id']
 
     return (data, users, items), None
+
+
+def load_data_yahoo_movies(split=False):
+    # Load ratings data
+    data = pd.read_csv('data/yahoo_movies/ratings.csv', header=None)
+    data.columns = ['user_id', 'item_id', 'rating']
+
+
+    # to avoid cold start drop users with less than 5 ratings and items with less than 5 ratings 
+    # [ref: https://link.springer.com/chapter/10.1007/978-3-030-49461-2_18]
+    # avoid cold start
+    data = data.groupby('user_id').filter(lambda x: len(x) >= 5)
+    data = data.groupby('item_id').filter(lambda x: len(x) >= 5)
+
+    # reset user and item ids
+    data['user_index'] = data['user_id']
+    data['item_index'] = data['item_id']
+    data['user_id'] = data['user_id'].astype('category').cat.codes.values
+    data['item_id'] = data['item_id'].astype('category').cat.codes.values
+
+    users = pd.DataFrame(data['user_index'].unique(), columns=['user_id'])
+    items = pd.DataFrame(data['item_index'].unique(), columns=['item_id'])
+
+    users.reset_index(inplace=True)
+    items.reset_index(inplace=True)
+
+    # train test split
+    if split:
+        train_data, test_data = train_test_split(data, test_size=(1-TRAIN_SIZE), train_size=TRAIN_SIZE, random_state=0, shuffle=True)
+
+        # reset index
+        train_data = train_data.reset_index(drop=True)
+        test_data = test_data.reset_index(drop=True)
+        
+        train_users = train_users.reset_index(drop=True)
+        test_users = test_users.reset_index(drop=True)
+
+        train_items = train_items.reset_index(drop=True)
+        test_items = test_items.reset_index(drop=True)
+
+        return (train_data, train_users, train_items), (test_data, test_users, test_items)
+    
+    else:
+        return data, users, items
+    
