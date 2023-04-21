@@ -11,7 +11,7 @@ from utils.similarity_measures import *
 from utils.misc import *
 from utils.log import Logger
 from utils.evaluation import *
-from utils.sendmail import sendmail, sendmailwithfile
+from utils.sendmail import *
 from attacks.base_attack import *
 from attacks.random import *
 from attacks.average import *
@@ -39,6 +39,8 @@ def load_data(dataset, dirname, all_data, all_currentdir, log):
         data = load_data_ml_1M(split=True)
     elif dataset == 'dummy':
         data = load_data_dummy()
+    elif dataset == 'yahoo_movies':
+        data = load_data_yahoo_movies(split=True)
     else:
         if args.log:
             log.append('dataset {} not found'.format(dataset))
