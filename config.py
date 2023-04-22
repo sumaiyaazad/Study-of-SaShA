@@ -23,11 +23,11 @@ TOP_Ns = [10, 20, 30, 40, 50]   # top-N recommendation
 
 FILLER_SIZE_PERCENTAGE = 1       # fraction of average number of ratings per user
 ATTACK_SIZE_PERCENTAGE = 0.03    # 3% of the target user/item ratings will be attacked
-ATTACK_SIZES = [0.01, 0.02, 0.03, 0.04, 0.05] # 1%, 2%, 3%, 4%, 5% of the target user/item ratings will be attacked
-FILLER_SIZES = [0.5, 1, 1.5, 2, 2.5]       # 0.5, 1, 1.5, 2, 2.5, 3 times of the average number of ratings per user
+# ATTACK_SIZES = [0.01, 0.02, 0.03, 0.04, 0.05] # 1%, 2%, 3%, 4%, 5% of the target user/item ratings will be attacked
+# FILLER_SIZES = [0.5, 1, 1.5, 2, 2.5]       # 0.5, 1, 1.5, 2, 2.5, 3 times of the average number of ratings per user
 
-# ATTACK_SIZES = [ATTACK_SIZE_PERCENTAGE]
-# FILLER_SIZES = [FILLER_SIZE_PERCENTAGE]
+ATTACK_SIZES = [ATTACK_SIZE_PERCENTAGE]
+FILLER_SIZES = [FILLER_SIZE_PERCENTAGE]
 
 
 NUM_TARGET_ITEMS = 50   
@@ -35,6 +35,7 @@ NUM_TARGET_ITEMS = 50
 rating_range = {
     'ml-1m': (1, 5),
     'dummy': (1, 10),
+    'yahoo_movies': (1, 5),
 }
 
 try:

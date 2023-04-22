@@ -41,11 +41,17 @@ def load_data_ml_1M(split=False):
     if split:
         train_data, test_data = train_test_split(data, test_size=(1-TRAIN_SIZE), train_size=TRAIN_SIZE, random_state=0, shuffle=True)
 
-        train_users = users[users['user_id'].isin(train_data['user_id'].unique())]
-        train_items = items[items['item_id'].isin(train_data['item_id'].unique())]
+        train_users = users.copy()
+        train_items = items.copy()
 
-        test_users = users[users['user_id'].isin(test_data['user_id'].unique())]
-        test_items = items[items['item_id'].isin(test_data['item_id'].unique())]
+        test_users = users.copy()
+        test_items = items.copy()
+
+        # train_users = users[users['user_id'].isin(train_data['user_id'].unique())]
+        # train_items = items[items['item_id'].isin(train_data['item_id'].unique())]
+
+        # test_users = users[users['user_id'].isin(test_data['user_id'].unique())]
+        # test_items = items[items['item_id'].isin(test_data['item_id'].unique())]
 
         # reset index
         train_data = train_data.reset_index(drop=True)
@@ -86,8 +92,6 @@ def load_data_dummy():
 
 
 def load_data_yahoo_movies(split=False):
-#  SHIT DOESN'T WORK YET -_-
-
 
     # Load ratings data
     data = pd.read_csv('data/yahoo_movies/ratings.csv', header=None)
@@ -103,8 +107,6 @@ def load_data_yahoo_movies(split=False):
     # reset user and item ids
     data['user_index'] = data['user_id']
     data['item_index'] = data['item_id']
-    data['user_id'] = data['user_id'].astype('category').cat.codes.values
-    data['item_id'] = data['item_id'].astype('category').cat.codes.values
 
     users = pd.DataFrame(data['user_index'].unique(), columns=['user_id'])
     items = pd.DataFrame(data['item_index'].unique(), columns=['item_id'])
@@ -112,26 +114,26 @@ def load_data_yahoo_movies(split=False):
     users.reset_index(inplace=True)
     items.reset_index(inplace=True)
 
-    print(data.head())
-
-    # print(users.head())
-    print(items.head())
-
     users.columns = ['user_id', 'user_index']
     items.columns = ['item_id', 'item_index']
-    
-    # print(users.head())
-    print(items.head())
+
+    for r in users.itertuples():
+        data.loc[data['user_index'] == r.user_index, 'user_id'] = r.user_id
+
+    for r in items.itertuples():
+        data.loc[data['item_index'] == r.item_index, 'item_id'] = r.item_id
+
+    data.drop(['user_index', 'item_index'], axis=1, inplace=True)
 
     # train test split
     if split:
         train_data, test_data = train_test_split(data, test_size=(1-TRAIN_SIZE), train_size=TRAIN_SIZE, random_state=0, shuffle=True)        
 
-        train_users = users[users['user_id'].isin(train_data['user_id'].unique())]
-        train_items = items[items['item_id'].isin(train_data['item_id'].unique())]
+        train_users = users.copy()
+        train_items = items.copy()
 
-        test_users = users[users['user_id'].isin(test_data['user_id'].unique())]
-        test_items = items[items['item_id'].isin(test_data['item_id'].unique())]
+        test_users = users.copy()
+        test_items = items.copy()
 
         # reset index
         train_data.reset_index(drop=True)
@@ -148,3 +150,45 @@ def load_data_yahoo_movies(split=False):
     else:
         return data, users, items
     
+
+def load_kg_yahoo_movies(items):
+    """
+    Load KG data
+    params:
+        items: items dataframe
+    returns:
+        (kg, features, items)
+        kg: kg dataframe
+        features: features dataframe
+        items: items dataframe (input)
+    """
+
+    kg = pd.read_csv('data/yahoo_movies/df_map.csv')
+    kg.columns = ['feature', 'item_id', 'item_index_discard', 'value']
+
+    kg['feature'] = kg['feature'].astype('int64')
+    kg['item_id'] = kg['item_id'].astype('int64')
+
+    # remove kg entries of items not in items
+    kg = kg[kg['item_id'].isin(items['item_index'])]
+
+    kg.drop(['item_index_discard'], axis=1, inplace=True)
+    kg.drop(['value'], axis=1, inplace=True)
+
+    kg['feature_id'] = kg['feature']
+
+    features = pd.DataFrame(kg['feature'].unique(), columns=['feature_id'])
+
+    features.reset_index(inplace=True)
+    features.columns = ['feature_id', 'feature']
+
+    for r in items.itertuples():
+        kg.loc[kg['item_id'] == r.item_index, 'item_id'] = r.item_id
+
+    for r in features.itertuples():
+        kg.loc[kg['feature'] == r.feature, 'feature_id'] = r.feature_id
+
+    kg.drop(['feature'], axis=1, inplace=True)
+
+    kg.reset_index(drop=True)
+    return (kg, features, items)

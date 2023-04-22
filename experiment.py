@@ -660,6 +660,8 @@ def main():
         next_version = args.version
         BREAKPOINT = args.breakpoint
 
+    SUBJECT = 'SAShA Detection - Experiment {}'.format(next_version)
+
     dirname = OUTDIR + 'experiment_results_' + str(next_version) + '/'
     print('Experiment result directory: ', dirname)
     os.makedirs(dirname, exist_ok=True)

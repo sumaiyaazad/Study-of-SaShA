@@ -28,3 +28,19 @@ def convert_to_matrix(data, users, items):
     for row in data.itertuples():
         matrix[users_dict[row[1]], items_dict[row[2]]] = row[3]
     return matrix, users_dict, items_dict
+
+
+def get_item_feature_matrix(kg, items, features):
+    """
+    Get the item feature matrix
+    if value is 1, then the item has the feature
+    if value is 0, then the item does not have the feature
+    """
+    nitems = len(items)
+    nfeatures = len(features)
+
+    item_feature_matrix = np.zeros((nitems, nfeatures))
+
+    for row in kg.itertuples():
+        item_feature_matrix[row[1], row[2]] = 1.
+    return item_feature_matrix
