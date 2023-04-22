@@ -1,3 +1,8 @@
+# ISSUE1: in generateRecommendations() need to handle passing r_min and r_max of the dataset fo mfcf. currently the R_MIN and R_MAX (hardcoded in config) are passed
+
+# ISSUE2: make seperate breakpoints for semantic attacks
+
+
 import argparse
 import pandas as pd
 import os
@@ -15,6 +20,8 @@ from utils.sendmail import *
 from attacks.base_attack import *
 from attacks.random import *
 from attacks.average import *
+from attacks.semantic_attack import *
+from attacks.sasha_random import *
 
 from recommender_systems.memory_based.item_based_CF import ItemBasedCF
 from recommender_systems.memory_based.user_based_CF import UserBasedCF
@@ -102,8 +109,7 @@ def generateRecommendations(train, rs_model, similarity, similarities_dir, recom
     elif rs_model == 'mfcf':
         train_data, train_users, train_items = train
         mfcf_train_data, mfcf_train_user, mfcf_train_item = convert_to_matrix(train_data, train_users, train_items)
-
-        rs = MatrixFactorizationCF(mfcf_train_data, mfcf_train_user, mfcf_train_item, K=K, alpha=ALPHA, beta=BETA, iterations=MAX_ITER, notification_level=0, log=log if args.log else None)
+        rs = MatrixFactorizationCF(mfcf_train_data, mfcf_train_user, mfcf_train_item, K=K, alpha=ALPHA, beta=BETA, iterations=MAX_ITER, notification_level=0, log=log if args.log else None, r_min=R_MIN, r_max=R_MAX)
 
         rs.train(verbose=True)
         rs.save_recommendations(output_path=recommendation_filename, n=TOP_N, verbose=True)
@@ -196,6 +202,12 @@ def experiment(log, dirname, BREAKPOINT=0):
             
             train, test = data
             train_data, train_users, train_items = train
+
+            bigskip()
+            print('number of users: {}'.format(len(train_users)))
+            print('number of items: {}'.format(len(train_items)))
+            print('number of ratings: {}'.format(len(train_data)))
+            bigskip()
 
             # sort items by average rating
             items_sorted = train_data.groupby('item_id')['rating'].mean().to_frame()
@@ -391,15 +403,6 @@ def experiment(log, dirname, BREAKPOINT=0):
                         else:
                             raise ValueError('Attack not found.')
 
-
-                        # generate attack profiles
-                        # for target_id in tqdm(target_items):
-                        #     # {target_id}_{attack size}_{filler size}.csv (e.g. random_100_100.csv)
-                        #     attack_profiles_filename = attack_dir + '{}_{}_{}.csv'.format(target_id, attack_size, filler_size)
-
-                        #     attack_generator.generate_profile(target_id, 0, attack_profiles_filename)
-                            # ISSUE: attack_generator.generate_profile() takes 1 target item at a time, but we want to take multiple target items at a time FIXED
-
                         # generate attack profiles
                         attack_profiles_filename = attack_dir + 'shilling_profiles_{}_{}.csv'.format(attack_size, filler_size)
                         attack_generator.generate_profile(target_items, 0, attack_profiles_filename)
@@ -485,12 +488,6 @@ def experiment(log, dirname, BREAKPOINT=0):
                                                         log,
                                                         attack_size,
                                                         filler_size)
-
-                                # print('Post-attack recommendations generated for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
-                                # if args.log:
-                                #     log.append('Post-attack recommendations generated for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
-                                # if args.send_mail:
-                                #     sendmail(SUBJECT, 'Post-attack recommendations generated for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
 
                     print('Post attack Recommendations generated for dataset {}, similarity measure {}, recommender system {}'.format(dataset, similarity, rs_model))
                     if args.send_mail:

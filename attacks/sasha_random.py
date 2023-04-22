@@ -1,42 +1,69 @@
 import numpy as np
-from attacks.base_attack import BaseAttack
+from attacks.semantic_attack import SemanticAttack
 import config as cfg
 import pandas as pd
 from tqdm import tqdm
 import os
 import random
+from utils.log import Logger
 
 np.random.seed(cfg.SEED)
 random.seed(cfg.SEED)
 
 
-class RandomAttack(BaseAttack):
-    def __init__(self, data, r_max, r_min, attack_size_percentage=cfg.ATTACK_SIZE_PERCENTAGE, filler_size_percentage=cfg.FILLER_SIZE_PERCENTAGE, push=cfg.PUSH):
+class SAShA_RandomAttack(SemanticAttack):
+    def __init__(self, 
+                 data, 
+                 r_max, 
+                 r_min,  
+                 similarity,
+                 kg_item_feature_matrix,
+                 similarity_filelocation,
+                 attack_size_percentage=cfg.ATTACK_SIZE_PERCENTAGE, 
+                 filler_size_percentage=cfg.FILLER_SIZE_PERCENTAGE, 
+                 push=cfg.PUSH,
+                 log=None):
         # drop colums timestamp
         if 'timestamp' in data.columns:
             data = data.drop(columns=['timestamp'])
 
-        super(RandomAttack, self).__init__(data, r_max, r_min, attack_size_percentage, filler_size_percentage, push)
+        super(SAShA_RandomAttack, self).__init__(data, 
+                                                r_max, 
+                                                r_min, 
+                                                similarity,
+                                                kg_item_feature_matrix,
+                                                similarity_filelocation,
+                                                attack_size_percentage, 
+                                                filler_size_percentage, 
+                                                push,
+                                                log)
+        
+        
         self.fillerSize = self.get_filler_size()
         self.selectedSize = self.get_selected_size()
         self.attackSize = self.get_attack_size()
 
     def generate_profile(self, target_items, sample, output_filename, verbose=False):
 
+        """
+        Generates the shilling profiles
+        :param target_items: the target items
+        :param sample: first fraction of the most similar items to be selected as filler items
+        :param output_filename: the output filename, where shilling profiles are saved
+        """
+
         start_shilling_user_id = max(list(self.data.user_id.unique()))
-        # shilling_profiles = pd.DataFrame(columns=list(self.data.columns))
         shilling_profiles = []
 
         for target_item_id in tqdm(target_items):
             for i in (tqdm(range(self.attackSize)) if verbose else range(self.attackSize)):
-            # for i in tqdm(range(self.attackSize)):
                 start_shilling_user_id += 1
 
                 # ADD SELECTED: Will Be Empty
                 selected_items = self.get_selected_items(target_item_id)
 
                 # ADD FILLER:   Random: Mean and Variance of dataset
-                filler_items = self.get_filler_items(selected_items, target_item_id)
+                filler_items = self.get_filler_items(selected_items, target_item_id, sample)
                 for filler_item_id in filler_items:
                     shilling_profiles.append([
                         start_shilling_user_id,
@@ -83,19 +110,24 @@ class RandomAttack(BaseAttack):
         attackSize = int(self.data.user_id.nunique() * self.attackSizePercentage)
         return attackSize
 
-    def get_filler_items(self, selectedItems, target_item_id):
+    def get_filler_items(self, selectedItems, target_item_id, sample):
         """
         randomly select from the items that are not in the selected items
 
         :param target_item_id: Target Item ID
         :param selectedItems: List of Already Selected Items
-        :return: list of filler items RANDOMLY CHOSEN
+        :param sample: first fraction of the most similar items to be selected as filler items
+        :return: list of filler items RANDOMLY CHOSEN from sample
         """
         selectedItems.append(target_item_id)
+
+        # Get Similar Items
+        similar_items = np.array(self.get_similar_items(target_item_id, sample))
+        # Remove Selected Items
+        # similar_items = np.setdiff1d(similar_items, selectedItems)
         
-        items = self.data.item_id.unique()
-        items = items[~np.isin(items, selectedItems)]
-        items = random.choices(items, k=self.fillerSize)
+        similar_items = similar_items[~np.isin(similar_items, selectedItems)]
+        items = random.choices(similar_items, k=self.fillerSize)
 
         return items
 

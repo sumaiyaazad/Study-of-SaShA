@@ -8,7 +8,7 @@ from utils.notification import *
 from utils.log import Logger
 
 class MatrixFactorizationCF:
-    def __init__(self, data, users, items, K, alpha, beta, iterations, notification_level=0, log=None):
+    def __init__(self, data, users, items, K, alpha, beta, iterations, notification_level=0, log=None, r_min=1, r_max=5):
         """
         Perform matrix factorization to predict empty
         entries in a matrix.
@@ -40,6 +40,8 @@ class MatrixFactorizationCF:
         self.iterations = iterations
         self.notification_level = notification_level
         self.log = log
+        self.r_min = r_min
+        self.r_max = r_max
 
     def train(self, verbose=False, show_mse=False):
         # Initialize user and item latent feature matrice
@@ -223,7 +225,7 @@ class MatrixFactorizationCF:
             for user_id in tqdm(self.train_users.keys()):
                 items = self.get_recommendations(self.train_users[user_id], n)
                 for item in items:
-                    f.write(str(user_id) + "," + str(items_rev[item]) + "," + str(self.get_rating(self.train_users[user_id], item)) + "\n")
+                    f.write(str(user_id) + "," + str(items_rev[item]) + "," + str(self.clamp(self.get_rating(self.train_users[user_id], item))) + "\n")
 
         if verbose:
             print('*'*10, 'Recommendations saved...', '*'*10)
@@ -233,3 +235,11 @@ class MatrixFactorizationCF:
 
         if self.log is not None:
             self.log.append('Finished saving mfcf recommendations. Total saving time: ' + str(time.time() - start_time))
+
+
+    def clamp(self, x):
+        """
+        :param x: the value to be clamped
+        :return: the clamped value
+        """
+        return max(self.r_min, min(x, self.r_max))

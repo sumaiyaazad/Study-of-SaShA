@@ -4,7 +4,7 @@ from utils.log import Logger
 import config as cfg
 import os
 import pandas as pd
-import tqdm as tqdm
+from tqdm import tqdm
 import time
 
 class SemanticAttack:
@@ -15,7 +15,6 @@ class SemanticAttack:
                         similarity,
                         kg_item_feature_matrix,
                         similarity_filelocation,
-                        kg_items_filelocation = None,
                         attack_size_percentage = cfg.ATTACK_SIZE_PERCENTAGE, 
                         filler_size_percentage = cfg.FILLER_SIZE_PERCENTAGE, 
                         push = cfg.PUSH,
@@ -40,17 +39,19 @@ class SemanticAttack:
         self.data = data
         self.r_max = r_max
         self.r_min = r_min
-        self.similarity = similarity
         self.target = push
-        self.kg_items_filelocation = kg_items_filelocation
-        self.similarity_filelocation = similarity_filelocation
-        self.attackSizePercentage = attack_size_percentage
-        self.fillerSizePercentage = filler_size_percentage
         self.targetRating = r_max if push else r_min
         self.fillerRating = int(r_max - r_min)
         self.datasetMean = self.data.rating.mean()
         self.datasetStd = self.data.rating.std()
+
+        self.similarity = similarity
+        self.similarity_filelocation = similarity_filelocation
+
+        self.attackSizePercentage = attack_size_percentage
+        self.fillerSizePercentage = filler_size_percentage
         self.project_dir = os.path.abspath(os.path.join(os.getcwd(), '..'))
+
         self.item_item_similarity = None
         self.item_feature_matrix = kg_item_feature_matrix
         self.log = log
@@ -117,7 +118,7 @@ class SemanticAttack:
             self.generate_similarity(verbose=verbose)
             return
 
-        items = self.train_items['item_id'].unique().tolist()
+        items = self.data['item_id'].unique().tolist()
 
         self.item_item_similarity = {}
         for item in items:
@@ -157,8 +158,10 @@ class SemanticAttack:
         # convert to list of tuples
         iisim = []
 
-        for item1 in tqdm(self.train_items['item_id'].unique()):
-            for item2 in self.train_items['item_id'].unique():
+        items = self.data['item_id'].unique().tolist()
+
+        for item1 in tqdm(items):
+            for item2 in items:
                 if item1 != item2:
                     iisim.append([item1, item2, self.item_item_similarity[item1][item2]])
 
@@ -177,7 +180,7 @@ class SemanticAttack:
     def generate_profile(self, target_item_id, sample, output_filename): raise NotImplementedError
 
     @abstractmethod
-    def get_filler_items(self, selected, target_item_id): raise NotImplementedError
+    def get_filler_items(self, selected, target_item_id, sample): raise NotImplementedError
 
     @abstractmethod
     def get_selected_items(self, target_item_id): raise NotImplementedError
@@ -194,3 +197,24 @@ class SemanticAttack:
         :return: the clamped value
         """
         return max(self.r_min, min(x, self.r_max))
+    
+    def get_similar_items(self, item_id, sample, verbose=False):
+        """
+        :param item_id: the item id to find similar items for
+        :param sample: the sample to find similar items for
+
+        :return: a list of similar items from {sample} quantile of the similarity distribution
+
+        """
+
+        if self.item_item_similarity is None:
+            self.load_similarity(verbose=verbose)
+
+        sim_df = pd.DataFrame(self.item_item_similarity[item_id].items(), columns=['item_id', 'similarity'])
+        sim_df['item_id'] = sim_df['item_id'].astype(int)
+
+
+        q1 = np.quantile(sim_df['similarity'], sample)
+        similar = sim_df[sim_df['similarity'] >= q1]['item_id'].tolist()
+
+        return similar

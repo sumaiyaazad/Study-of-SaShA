@@ -98,6 +98,10 @@ def load_data_yahoo_movies(split=False):
     data.columns = ['user_id', 'item_id', 'rating']
 
 
+    # randomly sample 25% of the data for faster experimentation
+    # [ref: https://link.springer.com/chapter/10.1007/978-3-030-49461-2_18]
+    data = data.sample(frac=SAMPLE_FRAC, random_state=0)
+
     # to avoid cold start drop users with less than 5 ratings and items with less than 5 ratings 
     # [ref: https://link.springer.com/chapter/10.1007/978-3-030-49461-2_18]
     # avoid cold start

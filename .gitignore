@@ -8,3 +8,4 @@ output/
 *.dylib
 test.py
 rough.py
+test*
