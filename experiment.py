@@ -128,7 +128,7 @@ def generateRecommendations(train, rs_model, similarity, similarities_dir, recom
     pass
 
 
-def experiment(log, dirname, BREAKPOINT=0):
+def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
     """
     Run experiment
     param log: object of Logger class
@@ -675,7 +675,7 @@ def main():
 
     # ------------------------------------------ starting experiment ------------------------------------------
     try:
-        experiment(log, dirname, BREAKPOINT)
+        experiment(log, dirname, BREAKPOINT, SUBJECT)
     except Exception as e:
         if args.log:
             log.append('experiment failed')

@@ -47,7 +47,7 @@ LOG_FILE = 'log.txt'
 EXP_NO = 0
 
 # ----------------------------------------------- send mail -----------------------------------------------
-SUBJECT = 'SAShA detection'
+# SUBJECT = 'SAShA detection'
 BODY = 'Experiment done. sending a copy of the log file'
 
 # ----------------------------------------------- Data Loader -----------------------------------------------
