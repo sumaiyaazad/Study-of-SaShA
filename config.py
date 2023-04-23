@@ -2,9 +2,9 @@
 SEED = 2023
 DATADIR = './data/'
 # DATASETS = ['dummy']
-DATASETS = ['yahoo_movies']
+# DATASETS = ['yahoo_movies']
 # DATASETS = ['ml-1m']
-# DATASETS = ['yahoo_movies', 'SmallLibraryThing']
+DATASETS = ['yahoo_movies', 'SmallLibraryThing']
 OUTDIR = './output/'
 # ATTACKS = ['random']
 ATTACKS_BASE = ['random', 'average']
@@ -40,12 +40,8 @@ RATING_RANGE = {
     'ml-1m': (1, 5),
     'dummy': (1, 10),
     'yahoo_movies': (1, 5),
+    'SmallLibraryThing': (1, 10),
 }
-
-try:
-    R_MIN, R_MAX = RATING_RANGE[DATASETS[0]]
-except:
-    R_MIN, R_MAX = 1, 5
 
 LOG_FILE = 'log.txt'
 EXP_NO = 0

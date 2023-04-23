@@ -45,6 +45,8 @@ def load_data(dataset, dirname, all_data, all_currentdir, log):
         data = load_data_dummy()
     elif dataset == 'yahoo_movies':
         data = load_data_yahoo_movies(split=True)
+    elif dataset == 'SmallLibraryThing':
+        data = load_data_SmallLibraryThing(split=True)
     else:
         if args.log:
             log.append('dataset {} not found'.format(dataset))
@@ -432,8 +434,19 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
             train, test = data
             train_data, train_users, train_items = train
             
-            kg, features, _ = load_kg_yahoo_movies(train_items)
+            if dataset == 'yahoo_movies':
+                kg, features, _ = load_kg_yahoo_movies(train_items)
+            elif dataset == 'SmallLibraryThing':
+                kg, features, _ = load_kg_SmallLibraryThing(train_items)
+            else:
+                if args.log:
+                    log.append('dataset {} not found'.format(dataset))
+                    log.abort()
+                raise ValueError('Dataset not found.')
+            
+            
             item_feature_matrix = get_item_feature_matrix(kg, train_items, features)
+
             similarity_filelocation = currentdir + 'similarities/' + 'kg_item_similarity_matrix.csv'
 
             for attack in ATTACKS_SEMANTIC:
