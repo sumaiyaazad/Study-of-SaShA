@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from config import *
+from ast import literal_eval
 
 def train_test_split(data, test_size=0.2, train_size=0.8, random_state=0, shuffle=True):
     # split data into train and test
@@ -155,7 +156,7 @@ def load_data_yahoo_movies(split=False):
         return data, users, items
     
 
-def load_kg_yahoo_movies(items):
+def load_kg_yahoo_movies(items, feature_type='ontological'):
     """
     Load KG data
     params:
@@ -167,14 +168,26 @@ def load_kg_yahoo_movies(items):
         items: items dataframe (input)
     """
 
+    selected_features = pd.read_csv('data/yahoo_movies/selected_features.csv')
+    selected_features = literal_eval(selected_features.loc[selected_features['type'] == feature_type]['features'].to_list()[0])
+
     kg = pd.read_csv('data/yahoo_movies/df_map.csv')
     kg.columns = ['feature', 'item_id', 'item_index_discard', 'value']
 
     kg['feature'] = kg['feature'].astype('int64')
     kg['item_id'] = kg['item_id'].astype('int64')
 
+    print('kg shape: ', kg.shape)
+
+    # remove features not in selected_features
+    kg = kg[kg['feature'].isin(selected_features)]
+
+    print('kg shape after removing features not in selected_features: ', kg.shape)
+
     # remove kg entries of items not in items
     kg = kg[kg['item_id'].isin(items['item_index'])]
+
+    print('kg shape after removing kg entries of items not in items: ', kg.shape)
 
     kg.drop(['item_index_discard'], axis=1, inplace=True)
     kg.drop(['value'], axis=1, inplace=True)

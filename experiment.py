@@ -131,10 +131,6 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
     param log: object of Logger class
     param dirname: directory to store experiment results
     """
-    print(BREAKPOINT, dirname)
-
-    # return
-
                         # (experiment start)
     if BREAKPOINT < 1:  # ------------------------------------------------------------------------------------ breakpoint 1
 

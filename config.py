@@ -12,7 +12,6 @@ ATTACKS_SEMANTIC = ['sasha_random']
 # ATTACKS_SEMANTIC = ['sasha_random', 'sasha_average']
 ATTACKS = ATTACKS_BASE + ATTACKS_SEMANTIC
 
-print(ATTACKS)
 # RS_MODELS = ['mfcf', 'ubcf']
 RS_MODELS = ['mfcf', 'ibcf', 'ubcf']
 SIMILARITY_MEASURES = ['cosine']
