@@ -32,14 +32,14 @@ FILLER_SIZES = [FILLER_SIZE_PERCENTAGE]
 
 NUM_TARGET_ITEMS = 50   
 
-rating_range = {
+RATING_RANGE = {
     'ml-1m': (1, 5),
     'dummy': (1, 10),
     'yahoo_movies': (1, 5),
 }
 
 try:
-    R_MIN, R_MAX = rating_range[DATASETS[0]]
+    R_MIN, R_MAX = RATING_RANGE[DATASETS[0]]
 except:
     R_MIN, R_MAX = 1, 5
 

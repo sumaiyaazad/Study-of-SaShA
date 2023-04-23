@@ -1,4 +1,4 @@
-# ISSUE1: in generateRecommendations() need to handle passing r_min and r_max of the dataset fo mfcf. currently the R_MIN and R_MAX (hardcoded in config) are passed
+# ISSUE1: in generateRecommendations() need to handle passing r_min and r_max of the dataset fo mfcf. currently the R_MIN and R_MAX (hardcoded in config) are passed    FIXED
 
 # ISSUE2: make seperate breakpoints for semantic attacks
 
@@ -67,7 +67,7 @@ def load_data(dataset, dirname, all_data, all_currentdir, log):
 
     return all_data, all_currentdir, data, currentdir
 
-def generateRecommendations(train, rs_model, similarity, similarities_dir, recommendation_filename, log, attack_size=None, filler_size=None):
+def generateRecommendations(train, rs_model, similarity, similarities_dir, recommendation_filename, log, dataset, attack_size=None, filler_size=None):
     """
     Generate recommendations for all users in the training set
     param train: training set
@@ -93,23 +93,25 @@ def generateRecommendations(train, rs_model, similarity, similarities_dir, recom
         if args.noti_level > 0:
             noti.balloon_tip('SAShA Detection', 'Similarity measure {} not found. Experiment aborted.'.format(similarity))
         raise ValueError('Similarity measure not found.')
+    
+    rating_range = RATING_RANGE[dataset]
 
     if rs_model == 'ibcf':
         similarity_filename = similarities_dir + 'item_item_' + similarity + ('' if attack_size is None else '_{}'.format(attack_size)) + ('' if filler_size is None else '_{}'.format(filler_size)) + '.csv'
 
-        rs = ItemBasedCF(train, similarity_filename, similarity=similarity_function, notification_level=0, log=log if args.log else None)
+        rs = ItemBasedCF(train, similarity_filename, similarity=similarity_function, rating_range=rating_range, notification_level=0, log=log if args.log else None)
         rs.getRecommendationsForAllUsers(n_neighbors=IKNN, verbose=True, output_filename=recommendation_filename, sep=',', top_n=TOP_N)
 
     elif rs_model == 'ubcf':
         similarity_filename = similarities_dir + 'user_user_' + similarity + ('' if attack_size is None else '_{}'.format(attack_size)) + ('' if filler_size is None else '_{}'.format(filler_size)) + '.csv'
 
-        rs = UserBasedCF(train, similarity_filename, similarity=similarity_function, notification_level=0, log=log if args.log else None)
+        rs = UserBasedCF(train, similarity_filename, similarity=similarity_function, rating_range=rating_range, notification_level=0, log=log if args.log else None)
         rs.getRecommendationsForAllUsers(n_neighbors=UKNN, verbose=True, output_filename=recommendation_filename, sep=',', top_n=TOP_N)
 
     elif rs_model == 'mfcf':
         train_data, train_users, train_items = train
         mfcf_train_data, mfcf_train_user, mfcf_train_item = convert_to_matrix(train_data, train_users, train_items)
-        rs = MatrixFactorizationCF(mfcf_train_data, mfcf_train_user, mfcf_train_item, K=K, alpha=ALPHA, beta=BETA, iterations=MAX_ITER, notification_level=0, log=log if args.log else None, r_min=R_MIN, r_max=R_MAX)
+        rs = MatrixFactorizationCF(mfcf_train_data, mfcf_train_user, mfcf_train_item, K=K, alpha=ALPHA, beta=BETA, iterations=MAX_ITER, rating_range=rating_range, notification_level=0, log=log if args.log else None, r_min=R_MIN, r_max=R_MAX)
 
         rs.train(verbose=True)
         rs.save_recommendations(output_path=recommendation_filename, n=TOP_N, verbose=True)
@@ -289,6 +291,7 @@ def experiment(log, dirname, BREAKPOINT=0):
 
                     pre_attack_recommendations_filename = recommendations_dir + 'pre_attack_{}_recommendations.csv'.format(similarity)
                     generateRecommendations(train=train, 
+                                            dataset=dataset,
                                             rs_model=rs_model, 
                                             similarity=similarity, 
                                             similarities_dir=pre_attack_similarities_dir, recommendation_filename=pre_attack_recommendations_filename, 
@@ -378,7 +381,7 @@ def experiment(log, dirname, BREAKPOINT=0):
                 
                 attack_dir = currentdir + 'attack_profiles/' + attack + '/'
                 os.makedirs(attack_dir, exist_ok=True)
-                R_MIN, R_MAX = rating_range[dataset]
+                r_min, r_max = RATING_RANGE[dataset]
 
 
                 for attack_size in ATTACK_SIZES:
@@ -397,9 +400,9 @@ def experiment(log, dirname, BREAKPOINT=0):
 
                         # create attack object
                         if attack == 'random':
-                            attack_generator = RandomAttack(train_data, R_MAX, R_MIN, attack_size, filler_size)
+                            attack_generator = RandomAttack(train_data, r_max, r_min, attack_size, filler_size)
                         elif attack == 'average':
-                            attack_generator = AverageAttack(train_data, R_MAX, R_MIN, attack_size, filler_size)
+                            attack_generator = AverageAttack(train_data, r_max, r_min, attack_size, filler_size)
                         else:
                             raise ValueError('Attack not found.')
 
@@ -486,6 +489,7 @@ def experiment(log, dirname, BREAKPOINT=0):
                                                         similarity_dir,
                                                         recommendations_filename,
                                                         log,
+                                                        dataset,
                                                         attack_size,
                                                         filler_size)
 

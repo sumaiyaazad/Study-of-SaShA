@@ -9,13 +9,14 @@ from utils.log import Logger
 
 class ItemBasedCF:
 
-    def __init__(self, data, similarity_filename, similarity=cosine_similarity, notification_level=0, log=None):
+    def __init__(self, data, similarity_filename, similarity=cosine_similarity, rating_range=(1, 5), notification_level=0, log=None):
 
         """
         Initialize the ItemBasedCF class
         :param data: train data (train_data, train_users, train_items)
         :param similarity: similarity measure to use
         :param similarity_filename: filename to save/load item item similarities
+        :param rating_range: range of ratings (min, max)
         :param notification_level: 
                                     0: no notification, 
                                     1: notification when training is done and recommendations are saved,
@@ -32,6 +33,7 @@ class ItemBasedCF:
         self.n_items = len(self.train_items['item_id'].unique())
             
         self.similarity = similarity
+        self.rating_range = rating_range
         self.itemUserMatrix = None
         self.item_item_similarity = None
         self.recommendations = None

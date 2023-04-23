@@ -8,7 +8,7 @@ from utils.notification import *
 from utils.log import Logger
 
 class MatrixFactorizationCF:
-    def __init__(self, data, users, items, K, alpha, beta, iterations, notification_level=0, log=None, r_min=1, r_max=5):
+    def __init__(self, data, users, items, K, alpha, beta, iterations, rating_range=(1, 5), notification_level=0, log=None):
         """
         Perform matrix factorization to predict empty
         entries in a matrix.
@@ -40,8 +40,7 @@ class MatrixFactorizationCF:
         self.iterations = iterations
         self.notification_level = notification_level
         self.log = log
-        self.r_min = r_min
-        self.r_max = r_max
+        self.r_min, self.r_max = rating_range
 
     def train(self, verbose=False, show_mse=False):
         # Initialize user and item latent feature matrice

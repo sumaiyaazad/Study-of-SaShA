@@ -44,7 +44,7 @@ def main():
 
     similarity_filename = OUTDIR + 'item_based_CF/' + 'item_based_CF_' + args.simi_location
 
-    ibcf = ItemBasedCF(train, similarity_filename, similarity=similarity_measure, notification_level=args.not_level, log=None)
+    ibcf = ItemBasedCF(train, similarity_filename, similarity=similarity_measure, rating_range=(1,5), notification_level=args.not_level, log=None)
 
     ibcf.getRecommendationsForAllUsers(verbose=True, output_filename=output, sep=',', n_neighbors=args.n_neighbors, top_n=args.top_n)
 

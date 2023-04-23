@@ -46,7 +46,7 @@ def main():
         os.makedirs(OUTDIR + 'matrix_factorization_CF/')
 
     # mf = MatrixFactorizationCF(data, K=2, alpha=0.001, beta=0.02, iterations=100)
-    mf = MatrixFactorizationCF(data, user_data, item_data, K=args.k, alpha=args.alpha, beta=args.beta, iterations=args.max_iter, notification_level=args.not_level)
+    mf = MatrixFactorizationCF(data, user_data, item_data, K=args.k, alpha=args.alpha, beta=args.beta, iterations=args.max_iter, rating_range=(1, 5), notification_level=args.not_level)
     # mf = MatrixFactorizationCF(data, K=K, alpha=ALPHA, beta=BETA, iterations=MAX_ITER)
 
     mf.save_data_matrix(OUTDIR + 'matrix_factorization_CF/' + 'matrix_factorization_CF_' + args.dataset + '_data_matrix.csv')
