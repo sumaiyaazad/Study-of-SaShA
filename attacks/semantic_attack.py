@@ -107,7 +107,7 @@ class SemanticAttack:
 
         print('*'*10, 'Loading kg similarities...', '*'*10)
 
-        # load as csv
+        # load item-item similarity matrix
         try:
             iisim_df = pd.read_csv(self.similarity_filelocation)
             iisim_df.columns = ['item1', 'item2', 'similarity']

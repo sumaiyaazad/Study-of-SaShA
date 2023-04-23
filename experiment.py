@@ -1,8 +1,3 @@
-# ISSUE1: in generateRecommendations() need to handle passing r_min and r_max of the dataset fo mfcf. currently the R_MIN and R_MAX (hardcoded in config) are passed    FIXED
-
-# ISSUE2: make seperate breakpoints for semantic attacks
-
-
 import argparse
 import pandas as pd
 import os
@@ -17,11 +12,13 @@ from utils.misc import *
 from utils.log import Logger
 from utils.evaluation import *
 from utils.sendmail import *
+
 from attacks.base_attack import *
 from attacks.random import *
 from attacks.average import *
-from attacks.semantic_attack import *
-from attacks.sasha_random import *
+
+from attacks.semantic_attack import SemanticAttack
+from attacks.sasha_random import SAShA_RandomAttack
 
 from recommender_systems.memory_based.item_based_CF import ItemBasedCF
 from recommender_systems.memory_based.user_based_CF import UserBasedCF
@@ -111,7 +108,7 @@ def generateRecommendations(train, rs_model, similarity, similarities_dir, recom
     elif rs_model == 'mfcf':
         train_data, train_users, train_items = train
         mfcf_train_data, mfcf_train_user, mfcf_train_item = convert_to_matrix(train_data, train_users, train_items)
-        rs = MatrixFactorizationCF(mfcf_train_data, mfcf_train_user, mfcf_train_item, K=K, alpha=ALPHA, beta=BETA, iterations=MAX_ITER, rating_range=rating_range, notification_level=0, log=log if args.log else None, r_min=R_MIN, r_max=R_MAX)
+        rs = MatrixFactorizationCF(mfcf_train_data, mfcf_train_user, mfcf_train_item, K=K, alpha=ALPHA, beta=BETA, iterations=MAX_ITER, rating_range=rating_range, notification_level=0, log=log if args.log else None)
 
         rs.train(verbose=True)
         rs.save_recommendations(output_path=recommendation_filename, n=TOP_N, verbose=True)
@@ -194,6 +191,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
     ####################################### GLOBAL VARIABLES ############################################
     all_data = {}                                                                                       #      
     all_currentdir = {}                                                                                 #
+    item_feature_matrix = None                                                                          #
     #####################################################################################################
 
                         # (load data, popular and unpopular items, target items similarity)
@@ -369,7 +367,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 # so far we have calculated the hit ratio of pre-attack recommendations
 # now, we will generate attack profiles
 
-                        # (generate attack profiles)
+                        # (generate base-attack profiles)
     if BREAKPOINT < 5:  # ------------------------------------------------------------------------------------ breakpoint 5
         for dataset in DATASETS:
             all_data, all_currentdir, data, currentdir = load_data(dataset, dirname, all_data, all_currentdir, log)
@@ -377,7 +375,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
             train, test = data
             train_data, train_users, train_items = train
 
-            for attack in ATTACKS:
+            for attack in ATTACKS_BASE:
                 
                 attack_dir = currentdir + 'attack_profiles/' + attack + '/'
                 os.makedirs(attack_dir, exist_ok=True)
@@ -417,7 +415,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                         
 
         if args.send_mail:
-            sendmail(SUBJECT, 'All attack profiles generated.')
+            sendmail(SUBJECT, 'All base-attack profiles generated.')
         
         BREAKPOINT = 5
         print('BREAKPOINT 5')
@@ -426,11 +424,85 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
             log.append('BREAKPOINT 5')
             log.append('\n\n\n')
 
+
+# so far we have generated attack profiles for base-attacks
+# now, we will generate attack profiles for semantic attacks
+
+                        # (generate semantic-attack profiles)
+    if BREAKPOINT < 6:  # ------------------------------------------------------------------------------------ breakpoint 6
+        for dataset in DATASETS:
+            all_data, all_currentdir, data, currentdir = load_data(dataset, dirname, all_data, all_currentdir, log)
+            
+            train, test = data
+            train_data, train_users, train_items = train
+            
+            kg, features, _ = load_kg_yahoo_movies(train_items)
+            item_feature_matrix = get_item_feature_matrix(kg, train_items, features)
+            similarity_filelocation = currentdir + 'similarities/' + 'kg_item_similarity_matrix.csv'
+
+            for attack in ATTACKS_SEMANTIC:
+                
+                attack_dir = currentdir + 'attack_profiles/' + attack + '/'
+                os.makedirs(attack_dir, exist_ok=True)
+                r_min, r_max = RATING_RANGE[dataset]
+
+
+                for attack_size in ATTACK_SIZES:
+                    for filler_size in FILLER_SIZES:
+
+                        # launch attacks ---------------------------------------------------------------------------------------
+
+                        print('Generating {} attack profiles with attack size {} and filler size {} for dataset {}'.format(attack, attack_size, filler_size, dataset))
+                        if args.log:
+                            log.append('Generating {} attack profiles with attack size {} and filler size {} for dataset {}'.format(attack, attack_size, filler_size, dataset))
+
+                        # load target items
+                        target_items = pd.read_csv(currentdir + '{}_unpopular_items.csv'.format(NUM_TARGET_ITEMS))
+                        target_items.columns = ['item_id', 'avg_rating']
+                        target_items = target_items['item_id'].tolist()
+
+                        # create attack object
+                        if attack == 'sasha_random':
+                            attack_generator = RandomAttack(train_data, r_max, r_min, attack_size, filler_size)
+                            attack_generator = SAShA_RandomAttack(  data=train_data, 
+                                                                    r_max=r_max,
+                                                                    r_min=r_min,
+                                                                    similarity=KG_SIMILARITY,
+                                                                    kg_item_feature_matrix=item_feature_matrix,
+                                                                    similarity_filelocation=similarity_filelocation,
+                                                                    attack_size_percentage=attack_size,
+                                                                    filler_size_percentage=filler_size)
+
+                        elif attack == 'sasha_average':
+                            attack_generator = AverageAttack(train_data, r_max, r_min, attack_size, filler_size)
+                        else:
+                            raise ValueError('Attack not found.')
+
+                        # generate attack profiles
+                        attack_profiles_filename = attack_dir + 'shilling_profiles_{}_{}.csv'.format(attack_size, filler_size)
+                        attack_generator.generate_profile(target_items, SAMPLE, attack_profiles_filename)
+                    
+                        print('{} attack profiles with attack size {} and filler size {} for dataset {} generated'.format(attack, attack_size, filler_size, dataset))
+                        if args.log:
+                            log.append('{} attack profiles with attack size {} and filler size {} for dataset {} generated'.format(attack, attack_size, filler_size, dataset))
+
+                        
+
+        if args.send_mail:
+            sendmail(SUBJECT, 'All semantic-attack profiles generated.')
+        
+        BREAKPOINT = 6
+        print('BREAKPOINT 6')
+        bigskip()
+        if args.log:
+            log.append('BREAKPOINT 6')
+            log.append('\n\n\n')
+
 # so far we have generated attack profiles
 # now, we will generate post-attack recommendations for fixed attack_size and fixed filler_size
 
                         # (generate post-attack recommendations)
-    if BREAKPOINT < 6:  # ------------------------------------------------------------------------------------ breakpoint 6
+    if BREAKPOINT < 7:  # ------------------------------------------------------------------------------------ breakpoint 7
         for dataset in DATASETS:
             all_data, all_currentdir, data, currentdir = load_data(dataset, dirname, all_data, all_currentdir, log)
             
@@ -498,18 +570,18 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                         sendmail(SUBJECT, 'Post attack Recommendations generated for dataset {}, similarity measure {}, recommender system {}'.format(dataset, similarity, rs_model))
 
 
-        BREAKPOINT = 6
-        print('BREAKPOINT 6')
+        BREAKPOINT = 7
+        print('BREAKPOINT 7')
         bigskip()
         if args.log:
-            log.append('BREAKPOINT 6')
+            log.append('BREAKPOINT 7')
             log.append('\n\n\n')
 
 # so far we have generated post-attack recommendations
 # now, we will calculate hit ratio and generate graphs
 
                         # (calculate hit ratio and generate graphs)
-    if BREAKPOINT < 7:  # ------------------------------------------------------------------------------------ breakpoint 7
+    if BREAKPOINT < 8:  # ------------------------------------------------------------------------------------ breakpoint 8
         for dataset in DATASETS:
             if dataset in all_currentdir.keys():
                 currentdir = all_currentdir[dataset]
@@ -620,15 +692,17 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
         if args.send_mail:
             sendmail(SUBJECT, 'Evaluations done for post-attack recommendations')
 
-        BREAKPOINT = 7
-        print('BREAKPOINT 7')
+        BREAKPOINT = 8
+        print('BREAKPOINT 8')
         bigskip()
         if args.log:
-            log.append('BREAKPOINT 7')
+            log.append('BREAKPOINT 8')
             log.append('\n\n\n')
 
 # so far, we have calculated hit ratio for post-attack recommendations
-# now, we will calculate hit ratio for post-detection recommendations
+# now, we will detect attacks profiles
+# generate post-detection recommendations
+# calculate hit ratio for post-detection recommendations
 
     pass
 
