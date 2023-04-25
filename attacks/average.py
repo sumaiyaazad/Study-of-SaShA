@@ -109,19 +109,18 @@ class AverageAttack(BaseAttack):
 
         shilling_profiles_df.to_csv(output_filename, index=False)
 
-        return target_item_id
     
-    def generate_profiles(self, target_item_ids, sample, output_dir):
-        """
-        Generate Shilling Profiles for a list of target items
-        :param target_item_ids: List of Target Item IDs
-        :param sample: Sample Number
-        :param output_dir: Output Directory
-        :return: List of Target Item IDs
-        """
-        for target_item_id in target_item_ids:
-            output_filename = os.path.join(output_dir, "sample_{0}_{1}.csv".format(sample, int(target_item_id)))
-            self.generate_profile(target_item_id, sample, output_filename)
+    # def generate_profiles(self, target_item_ids, sample, output_dir):
+    #     """
+    #     Generate Shilling Profiles for a list of target items
+    #     :param target_item_ids: List of Target Item IDs
+    #     :param sample: Sample Number
+    #     :param output_dir: Output Directory
+    #     :return: List of Target Item IDs
+    #     """
+    #     for target_item_id in target_item_ids:
+    #         output_filename = os.path.join(output_dir, "sample_{0}_{1}.csv".format(sample, int(target_item_id)))
+    #         self.generate_profile(target_item_id, sample, output_filename)
 
-        return target_item_ids
+    #     return target_item_ids
     
