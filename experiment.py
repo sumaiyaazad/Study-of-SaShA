@@ -2,6 +2,7 @@ import argparse
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
+import shutil
 
 from config import *
 
@@ -749,6 +750,14 @@ def main():
     dirname = OUTDIR + 'experiment_results_' + str(next_version) + '/'
     print('Experiment result directory: ', dirname)
     os.makedirs(dirname, exist_ok=True)
+
+    # copy config file to experiment result directory
+    try:
+        shutil.copyfile('config.py', dirname + 'config.py')
+    except Exception as e:
+        print('Failed to copy config file to experiment result directory: ', e)
+        print('Continuing experiment without copying config file.')
+
     bigskip()
 
     if args.log:
