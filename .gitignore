@@ -8,4 +8,5 @@ output/
 *.dylib
 test.py
 rough.py
+experiment_description.md
 test*
