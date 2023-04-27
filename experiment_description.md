@@ -1,5 +1,6 @@
+## Experiments
 
-# Experiment flow
+### Experiment flow
 
     -choose dataset
         -load data
@@ -19,23 +20,16 @@
 
                 -choose attack
                     -for each attack size (and fixed filler size)
-                        -generate attack profiles : save to file
-                        -generate post-attack similarities : save to file
-                        -generate post-attack recommendations : save to file
-                        -calculate post-attack hit ratio : save to result
-                        -calculate prediction shift with pre-attack recommendations : save to result
+                        -for each filler size (and best attack size)
+                            -generate attack profiles : save to file
+                            -generate post-attack similarities : save to file
+                            -generate post-attack recommendations : save to file
+                            -calculate post-attack hit ratio : save to result
+                            -calculate prediction shift with pre-attack recommendations : save to result
                     -generate graph of (prediction shift, hit ratio) vs attack size : save to result
-                    -choose best attack size
-
-                    -for each filler size (and best attack size)
-                        -generate attack profiles : save to file
-                        -generate post-attack similarities : save to file
-                        -generate post-attack recommendations : save to file
-                        -calculate post-attack hit ratio : save to result
-                        -calculate prediction shift with pre-attack recommendations : save to result
                     -generate graph of (prediction shift, hit ratio) vs filler size : save to result
-                    -choose best filler size 
 
+                    -choose best attack size and best filler size
                     -choose detection method (using best attack and filler size)
                         -generate detected attack profiles : save to file
                         -generate post-detection similarities : save to file
@@ -44,8 +38,7 @@
                         -calculate prediction shift with pre-attack recommendations : save to result
                         -calculate detection accuracy : save to result
 
-
-# File Structure
+### Results File Structure
 
     {OUTDIR}
         experiment_results_{exp no.}
@@ -53,9 +46,8 @@
             {dataset}
                 {NUM_TARGET_ITEMS}_popular_items.csv                > (item, avg_rating)
                 {NUM_TARGET_ITEMS}_unpopular_items.csv              > (item, avg_rating)
-                similar_items_target
-                    {item_id}_{similarity measure}.csv               > (item, similarity)
                 similarities
+                    kg_item_similarity_matrix.csv                    > (item1, item2, similarity)
                     pre_attack
                         {item_item or user_user}_{similarity measure}.csv   > (item1, item2, similarity) or (user1, user2, similarity)
                     post_attack
@@ -87,5 +79,12 @@
                             pre_attack_{similarity measure}_hit_ratio.csv       > (among_first, hit_ratio)
                             post_attack_{similarity measure}_hit_ratio.csv      > (among_first, hit_ratio, attack_size, filler_size, attack)
                             post_detection_{similarity measure}_hit_ratio.csv   > (among_first, hit_ratio, attack_size, filler_size, attack, detection)
-                        pred_shift
+                        pred_shift  > tbd
                 
+
+- Run the following command to run the experiments.
+- Use breakpoint and version arguments to run the experiments in parts.
+
+```bash
+    python experiment.py
+```
