@@ -13,16 +13,18 @@ Collaborative filtering (CF) is a widely used technique for recommender systems.
 
 ## Datasets
 
-- [MovieLens 1M]( https://grouplens.org/datasets/movielens/1m/ )
-- [Yahoo Movies]()
-- [Small Library Things]()
+- [MovieLens 1M]( https://grouplens.org/datasets/movielens/1m/ ) (not processed for semantic aware attacks)
+- [Yahoo Movies](https://github.com/sisinflab/LinkedDatasets/tree/master/yahoo_23MB)
+- [Small Library Things](https://github.com/sisinflab/LinkedDatasets/tree/master/LibraryThing)
 
 ## Usage
 
 ### Data Preprocessing
 
 - Most of the preprocesing specific to datasets is done in the data_loader.py file.
-- Download the datasets from the links provided above. For the preprocessed data of Yahoo Movies and Small Library Things, refer [here]().
+- Download the datasets from the links provided above. You can find more compatible preprocessed datasets [here](https://github.com/sisinflab/LinkedDatasets/tree/master).
+
+- NEED TO ADD MORE DESCRIPTION ABOUT THE FILE CONTENTS
 
 <!-- ```bash
 
