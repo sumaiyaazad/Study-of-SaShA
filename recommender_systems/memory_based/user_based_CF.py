@@ -75,19 +75,26 @@ class UserBasedCF:
 
         print('*'*10, 'Saving similarities...', '*'*10)
 
-        # convert to list of tuples
-        uusim = []
+        # save to csv
+        with open(self.similarities_filename, 'w') as f:
+            f.write('user1,user2,similarity\n')
+            for user1 in tqdm(self.user_user_similarity.keys(), leave=False):
+                for user2 in self.user_user_similarity[user1].keys():
+                    f.write('{},{},{}\n'.format(user1, user2, self.user_user_similarity[user1][user2]))
 
-        for user1 in tqdm(self.train_users['user_id'].unique()):
-            for user2 in self.train_users['user_id'].unique():
-                if user1 != user2:
-                    uusim.append([user1, user2, self.user_user_similarity[user1][user2]])
+        # # convert to list of tuples
+        # uusim = []
 
-        # to dataframe
-        uusim = pd.DataFrame(uusim, columns=['user1', 'user2', 'similarity'])
+        # for user1 in tqdm(self.train_users['user_id'].unique()):
+        #     for user2 in self.train_users['user_id'].unique():
+        #         if user1 != user2:
+        #             uusim.append([user1, user2, self.user_user_similarity[user1][user2]])
 
-        # save as csv
-        uusim.to_csv(self.similarities_filename, index=False)
+        # # to dataframe
+        # uusim = pd.DataFrame(uusim, columns=['user1', 'user2', 'similarity'])
+
+        # # save as csv
+        # uusim.to_csv(self.similarities_filename, index=False)
 
         if self.log is not None:
             self.log.append('Similarities saved to {}'.format(self.similarities_filename))
@@ -125,7 +132,7 @@ class UserBasedCF:
         for user in self.train_users['user_id'].unique():
             self.user_user_similarity.setdefault(user, {})
             
-        for user1, user2, sim in tqdm(uusim_df.values):
+        for user1, user2, sim in tqdm(uusim_df.values, leave=False):
             self.user_user_similarity[user1][user2] = sim
             self.user_user_similarity[user2][user1] = sim
 
@@ -150,7 +157,7 @@ class UserBasedCF:
         for user in self.train_users['user_id']:
             self.userItemMatrix.setdefault(user, {})
 
-        for index, datapoint in tqdm(self.train_data.iterrows()):
+        for index, datapoint in tqdm(self.train_data.iterrows(), leave=False):
             self.userItemMatrix.setdefault(datapoint['user_id'], {})
             self.userItemMatrix[datapoint['user_id']][datapoint['item_id']] = datapoint['rating']
 
@@ -207,7 +214,7 @@ class UserBasedCF:
             print('*'*10, 'Creating user-user similarity matrix...', '*'*10)
             start_time = time.time()
 
-        for user1 in tqdm(self.train_users['user_id'].unique()):
+        for user1 in tqdm(self.train_users['user_id'].unique(), leave=False):
             self.user_user_similarity.setdefault(user1, {})
             for user2 in self.train_users['user_id'].unique():
                 if user1 != user2:
@@ -298,7 +305,7 @@ class UserBasedCF:
             start_time = time.time()
         
         self.recommendations = {}
-        for user in tqdm(self.train_users['user_id']):
+        for user in tqdm(self.train_users['user_id'], leave=False):
             self.recommendations[user] = self.getRecommendations(user, n_neighbors=n_neighbors)
         
         if verbose:

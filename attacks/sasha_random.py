@@ -55,8 +55,8 @@ class SAShA_RandomAttack(SemanticAttack):
         start_shilling_user_id = max(list(self.data.user_id.unique()))
         shilling_profiles = []
 
-        for target_item_id in tqdm(target_items):
-            for i in (tqdm(range(self.attackSize)) if verbose else range(self.attackSize)):
+        for target_item_id in (tqdm(target_items, leave=False) if verbose else target_items):
+            for i in range(self.attackSize):
                 start_shilling_user_id += 1
 
                 # ADD SELECTED: Will Be Empty
@@ -90,8 +90,6 @@ class SAShA_RandomAttack(SemanticAttack):
         :return: Filler Size
         """
         fillerSize = int((self.data.shape[0] / self.data.user_id.nunique() - 1)*self.fillerSizePercentage)
-
-        # print('filler size', fillerSize, self.data.shape[0], self.data.user_id.nunique())
 
         return fillerSize
 

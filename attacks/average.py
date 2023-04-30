@@ -80,8 +80,8 @@ class AverageAttack(BaseAttack):
         shilling_profiles = []
 
         # for i in tqdm(range(self.attackSize)):
-        for target_item_id in tqdm(target_items):
-            for i in (tqdm(range(self.attackSize)) if verbose else range(self.attackSize)):
+        for target_item_id in (tqdm(target_items, leave=False) if verbose else target_items):
+            for i in range(self.attackSize):
                 start_shilling_user_id += 1
 
                 # ADD SELECTED: Will Be Empty

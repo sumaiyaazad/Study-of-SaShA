@@ -1,11 +1,9 @@
-# working with individual target items
-# skipping breakpoints 
-
 import argparse
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import shutil
+from tqdm import tqdm
 
 from config import *
 
@@ -70,7 +68,7 @@ def load_data(dataset, dirname, all_data, all_currentdir, log):
 
     return all_data, all_currentdir, data, currentdir
 
-def generateRecommendations(train, rs_model, similarity, similarities_dir, recommendation_filename, log, dataset, attack_size=None, filler_size=None):
+def generateRecommendations(train, rs_model, similarity, similarities_dir, recommendation_filename, log, dataset, attack_size=None, filler_size=None, verbose=True):
     """
     Generate recommendations for all users in the training set
     param train: training set
@@ -103,21 +101,21 @@ def generateRecommendations(train, rs_model, similarity, similarities_dir, recom
         similarity_filename = similarities_dir + 'item_item_' + similarity + ('' if attack_size is None else '_{}'.format(attack_size)) + ('' if filler_size is None else '_{}'.format(filler_size)) + '.csv'
 
         rs = ItemBasedCF(train, similarity_filename, similarity=similarity_function, rating_range=rating_range, notification_level=0, log=log if args.log else None)
-        rs.getRecommendationsForAllUsers(n_neighbors=IKNN, verbose=True, output_filename=recommendation_filename, sep=',', top_n=TOP_N)
+        rs.getRecommendationsForAllUsers(n_neighbors=IKNN, verbose=verbose, output_filename=recommendation_filename, sep=',', top_n=TOP_N)
 
     elif rs_model == 'ubcf':
         similarity_filename = similarities_dir + 'user_user_' + similarity + ('' if attack_size is None else '_{}'.format(attack_size)) + ('' if filler_size is None else '_{}'.format(filler_size)) + '.csv'
 
         rs = UserBasedCF(train, similarity_filename, similarity=similarity_function, rating_range=rating_range, notification_level=0, log=log if args.log else None)
-        rs.getRecommendationsForAllUsers(n_neighbors=UKNN, verbose=True, output_filename=recommendation_filename, sep=',', top_n=TOP_N)
+        rs.getRecommendationsForAllUsers(n_neighbors=UKNN, verbose=verbose, output_filename=recommendation_filename, sep=',', top_n=TOP_N)
 
     elif rs_model == 'mfcf':
         train_data, train_users, train_items = train
         mfcf_train_data, mfcf_train_user, mfcf_train_item = convert_to_matrix(train_data, train_users, train_items)
         rs = MatrixFactorizationCF(mfcf_train_data, mfcf_train_user, mfcf_train_item, K=K, alpha=ALPHA, beta=BETA, iterations=MAX_ITER, rating_range=rating_range, notification_level=0, log=log if args.log else None)
 
-        rs.train(verbose=True)
-        rs.save_recommendations(output_path=recommendation_filename, n=TOP_N, verbose=True)
+        rs.train(verbose=verbose)
+        rs.save_recommendations(output_path=recommendation_filename, n=TOP_N, verbose=verbose)
 
     else:
         if args.log:
@@ -137,7 +135,15 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
     param log: object of Logger class
     param dirname: directory to store experiment results
     """
-                        # (experiment start)
+
+    # (experiment start)
+    if BREAKPOINT < 1 and 1 in SKIP_BREAKS:
+        BREAKPOINT = 1
+        print('Skipping breakpoint {}'.format(BREAKPOINT))
+        bigskip()
+        if args.log:
+            log.append('Skipping breakpoint {}'.format(BREAKPOINT))
+            log.append('\n\n\n')
     if BREAKPOINT < 1:  # ------------------------------------------------------------------------------------ breakpoint 1
 
         if args.log:
@@ -196,7 +202,14 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
     item_feature_matrix = None                                                                          #
     #####################################################################################################
 
-                        # (load data, popular and unpopular items, target items similarity)
+    # (load data, popular and unpopular items, target items similarity)
+    if BREAKPOINT < 2 and 2 in SKIP_BREAKS:
+        BREAKPOINT = 2
+        print('Skipping breakpoint {}'.format(BREAKPOINT))
+        bigskip()
+        if args.log:
+            log.append('Skipping breakpoint {}'.format(BREAKPOINT))
+            log.append('\n\n\n')      
     if BREAKPOINT < 2:  # ------------------------------------------------------------------------------------ breakpoint 2
         for dataset in DATASETS:
             # load dataset
@@ -258,7 +271,14 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 # so far, we have generated the most popular and unpopular items for the dataset
 # now, we will generate pre-attack recommendations for each recommender system
 
-                        # (generate pre-attack recommendations)
+    # (generate pre-attack recommendations)
+    if BREAKPOINT < 3 and 3 in SKIP_BREAKS:
+        BREAKPOINT = 3
+        print('Skipping breakpoint {}'.format(BREAKPOINT))
+        bigskip()
+        if args.log:
+            log.append('Skipping breakpoint {}'.format(BREAKPOINT))
+            log.append('\n\n\n')
     if BREAKPOINT < 3:  # ------------------------------------------------------------------------------------ breakpoint 3 
         for dataset in DATASETS:
             # load dataset
@@ -324,7 +344,14 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 # so far we have generated pre-attack recommendations for each recommender system
 # now, we will calculate the hit ratio of the pre-attack recommendations
 
-                        # (calculate hit ratio of pre-attack recommendations)
+    # (calculate hit ratio of pre-attack recommendations)
+    if BREAKPOINT < 4 and 4 in SKIP_BREAKS:
+        BREAKPOINT = 4
+        print('Skipping breakpoint {}'.format(BREAKPOINT))
+        bigskip()
+        if args.log:
+            log.append('Skipping breakpoint {}'.format(BREAKPOINT))
+            log.append('\n\n\n')
     if BREAKPOINT < 4:  # ------------------------------------------------------------------------------------ breakpoint 4 
         for dataset in DATASETS:
             
@@ -375,8 +402,18 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 # so far we have calculated the hit ratio of pre-attack recommendations
 # now, we will generate attack profiles
 
-                        # (generate base-attack profiles)
+    # (generate base-attack profiles)
+    if BREAKPOINT < 5 and 5 in SKIP_BREAKS:
+        BREAKPOINT = 5
+        print('Skipping breakpoint {}'.format(BREAKPOINT))
+        bigskip()
+        if args.log:
+            log.append('Skipping breakpoint {}'.format(BREAKPOINT))
+            log.append('\n\n\n')
     if BREAKPOINT < 5:  # ------------------------------------------------------------------------------------ breakpoint 5
+        
+        breakpoint_pbar = tqdm(total=len(DATASETS)*len(ATTACKS_BASE)*(len(ATTACK_SIZES) + len(FILLER_SIZES) - 1), desc='Breakpoint 5')
+
         for dataset in DATASETS:
             all_data, all_currentdir, data, currentdir = load_data(dataset, dirname, all_data, all_currentdir, log)
             
@@ -392,6 +429,9 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 
                 for attack_size in ATTACK_SIZES:
                     for filler_size in FILLER_SIZES:
+
+                        if (attack_size != ATTACK_SIZE_PERCENTAGE) and (filler_size != FILLER_SIZE_PERCENTAGE):
+                            continue
 
                         # launch attacks ---------------------------------------------------------------------------------------
 
@@ -413,8 +453,17 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                             raise ValueError('Attack not found.')
 
                         # generate attack profiles
-                        attack_profiles_filename = attack_dir + 'shilling_profiles_{}_{}.csv'.format(attack_size, filler_size)
-                        attack_generator.generate_profile(target_items, 0, attack_profiles_filename)
+
+                        # old code start ---------------------------------------------------------------------------------------
+                        # attack_profiles_filename = attack_dir + 'shilling_profiles_{}_{}.csv'.format(attack_size, filler_size)
+                        # attack_generator.generate_profile(target_items, 0, attack_profiles_filename)
+                        # old code end -----------------------------------------------------------------------------------------
+
+                        for item in target_items:
+                            attack_profiles_filename = attack_dir + 'shilling_profiles_{}_{}_{}.csv'.format(attack_size, filler_size, item)
+                            attack_generator.generate_profile([item], 0, attack_profiles_filename)
+
+                        breakpoint_pbar.update(1)
                     
                         print('{} attack profiles with attack size {} and filler size {} for dataset {} generated'.format(attack, attack_size, filler_size, dataset))
                         if args.log:
@@ -425,6 +474,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
         if args.send_mail:
             sendmail(SUBJECT, 'All base-attack profiles generated.')
         
+        breakpoint_pbar.close()
         BREAKPOINT = 5
         print('BREAKPOINT 5')
         bigskip()
@@ -436,8 +486,18 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 # so far we have generated attack profiles for base-attacks
 # now, we will generate attack profiles for semantic attacks
 
-                        # (generate semantic-attack profiles)
+    # (generate semantic-attack profiles)
+    if BREAKPOINT < 6 and 6 in SKIP_BREAKS:
+        BREAKPOINT = 6
+        print('Skipping breakpoint {}'.format(BREAKPOINT))
+        bigskip()
+        if args.log:
+            log.append('Skipping breakpoint {}'.format(BREAKPOINT))
+            log.append('\n\n\n')
     if BREAKPOINT < 6:  # ------------------------------------------------------------------------------------ breakpoint 6
+        
+        breakpoint_pbar = tqdm(total=len(DATASETS)*len(ATTACKS_SEMANTIC)*(len(ATTACK_SIZES) + len(FILLER_SIZES) - 1), desc='Breakpoint 6')
+        
         for dataset in DATASETS:
             all_data, all_currentdir, data, currentdir = load_data(dataset, dirname, all_data, all_currentdir, log)
             
@@ -469,6 +529,9 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                 for attack_size in ATTACK_SIZES:
                     for filler_size in FILLER_SIZES:
 
+                        if (attack_size != ATTACK_SIZE_PERCENTAGE) and (filler_size != FILLER_SIZE_PERCENTAGE):
+                            continue
+
                         # launch attacks ---------------------------------------------------------------------------------------
 
                         print('Generating {} attack profiles with attack size {} and filler size {} for dataset {}'.format(attack, attack_size, filler_size, dataset))
@@ -498,9 +561,17 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                             raise ValueError('Attack not found.')
 
                         # generate attack profiles
-                        attack_profiles_filename = attack_dir + 'shilling_profiles_{}_{}.csv'.format(attack_size, filler_size)
-                        attack_generator.generate_profile(target_items, SAMPLE, attack_profiles_filename)
+
+                        # old code start ---------------------------------------------------------------------------------------
+                        # attack_profiles_filename = attack_dir + 'shilling_profiles_{}_{}.csv'.format(attack_size, filler_size)
+                        # attack_generator.generate_profile(target_items, SAMPLE, attack_profiles_filename)
+                        # old code end -----------------------------------------------------------------------------------------
+
+                        for item in target_items:
+                            attack_profiles_filename = attack_dir + 'shilling_profiles_{}_{}_{}.csv'.format(attack_size, filler_size, item)
+                            attack_generator.generate_profile([item], SAMPLE, attack_profiles_filename)
                     
+                        breakpoint_pbar.update(1)
                         print('{} attack profiles with attack size {} and filler size {} for dataset {} generated'.format(attack, attack_size, filler_size, dataset))
                         if args.log:
                             log.append('{} attack profiles with attack size {} and filler size {} for dataset {} generated'.format(attack, attack_size, filler_size, dataset))
@@ -510,6 +581,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
         if args.send_mail:
             sendmail(SUBJECT, 'All semantic-attack profiles generated.')
         
+        breakpoint_pbar.close()
         BREAKPOINT = 6
         print('BREAKPOINT 6')
         bigskip()
@@ -520,8 +592,18 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 # so far we have generated attack profiles
 # now, we will generate post-attack recommendations for fixed attack_size and fixed filler_size
 
-                        # (generate post-attack recommendations)
+    # (generate post-attack recommendations)
+    if BREAKPOINT < 7 and 7 in SKIP_BREAKS:
+        BREAKPOINT = 7
+        print('Skipping breakpoint {}'.format(BREAKPOINT))
+        bigskip()
+        if args.log:
+            log.append('Skipping breakpoint {}'.format(BREAKPOINT))
+            log.append('\n\n\n')
     if BREAKPOINT < 7:  # ------------------------------------------------------------------------------------ breakpoint 7
+        
+        breakpoint_pbar = tqdm(total=len(DATASETS)*len(ATTACKS)*(len(ATTACK_SIZES) + len(FILLER_SIZES) - 1)*len(RS_MODELS)*len(SIMILARITY_MEASURES)*NUM_TARGET_ITEMS, desc='Breakpoint 7')
+        
         for dataset in DATASETS:
             all_data, all_currentdir, data, currentdir = load_data(dataset, dirname, all_data, all_currentdir, log)
             
@@ -542,53 +624,67 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                                 target_items.columns = ['item_id', 'avg_rating']
                                 target_items = target_items['item_id'].tolist()
 
-                                # fetch attack profiles for all target items
-                                attack_dir = currentdir + 'attack_profiles/' + attack + '/'
-                                attack_profiles = pd.DataFrame()
-                                attack_profile = pd.read_csv(attack_dir + 'shilling_profiles_{}_{}.csv'.format(attack_size, filler_size))
-                                attack_profiles = pd.concat([attack_profiles, attack_profile], ignore_index=True)
-                                attack_profiles = attack_profiles[['user_id', 'item_id', 'rating']]
-                                attack_profiles.columns = ['user_id', 'item_id', 'rating']
+                                for item in target_items:
+                                    # fetch attack profiles for target item
+                                    attack_dir = currentdir + 'attack_profiles/' + attack + '/'
+                                    attack_profiles = pd.DataFrame()
+                                    attack_profile = pd.read_csv(attack_dir + 'shilling_profiles_{}_{}_{}.csv'.format(attack_size, filler_size, item))
+                                    attack_profiles = pd.concat([attack_profiles, attack_profile], ignore_index=True)
+                                    attack_profiles = attack_profiles[['user_id', 'item_id', 'rating']]
+                                    attack_profiles.columns = ['user_id', 'item_id', 'rating']
 
-                                # concat attack data with train data
-                                new_train_data = pd.concat([train_data, attack_profiles], ignore_index=True)
-                                
-                                # concat attack users with train users
-                                temp = pd.DataFrame(attack_profiles.user_id.unique())
-                                temp.columns = ['user_id']
-                                new_train_users = train_users.copy()
-                                new_train_users = pd.concat([new_train_users, temp], ignore_index=True)
+                                    # concat attack data with train data
+                                    new_train_data = pd.concat([train_data, attack_profiles], ignore_index=True)
+                                    
+                                    # concat attack users with train users
+                                    temp = pd.DataFrame(attack_profiles.user_id.unique())
+                                    temp.columns = ['user_id']
+                                    new_train_users = train_users.copy()
+                                    new_train_users = pd.concat([new_train_users, temp], ignore_index=True)
 
-                                # similarity files directory and filenames defination
-                                similarity_dir = currentdir + 'similarities/' + 'post_attack/' + attack + '/'
-                                os.makedirs(similarity_dir, exist_ok=True)
+                                    # generate post-attack recommendations
+                                    if args.log:
+                                        log.append('Generating post-attack recommendations for dataset {}, similarity {}, rs_model {}, attack {}, attack size {} and filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
 
-                                # recommendations directory and filenames defination
-                                recommendations_dir = currentdir + rs_model + '/recommendations/' + attack + '/'
-                                os.makedirs(recommendations_dir, exist_ok=True)
-                                recommendations_filename = recommendations_dir + 'post_attack_{}_{}_{}_recommendations.csv'.format(similarity, attack_size, filler_size)
+                                    post_attack_dir = currentdir + 'post_attack_recommendations/' + similarity + '/' + rs_model + '/' + attack + '/'
+                                    os.makedirs(post_attack_dir, exist_ok=True)
+                                    post_attack_filename = post_attack_dir + 'post_attack_recommendations_{}_{}_{}_{}_{}.csv'.format(attack_size, filler_size, item, similarity, rs_model) #
 
-                                # generate post-attack recommendations
-                                print('Generating post-attack recommendations for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
-                                if args.log:
-                                    log.append('Generating post-attack recommendations for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
+                                    
+                                    # similarity files directory and filenames defination
+                                    similarity_dir = currentdir + 'similarities/' + 'post_attack/' + attack + '/'
+                                    os.makedirs(similarity_dir, exist_ok=True)
+
+                                    # recommendations directory and filenames defination
+                                    recommendations_dir = currentdir + rs_model + '/recommendations/' + attack + '/'
+                                    os.makedirs(recommendations_dir, exist_ok=True)
+                                    recommendations_filename = recommendations_dir + 'post_attack_{}_{}_{}_{}_recommendations.csv'.format(similarity, attack_size, filler_size, item)
 
 
-                                generateRecommendations((new_train_data, new_train_users, train_items),
-                                                        rs_model,
-                                                        similarity,
-                                                        similarity_dir,
-                                                        recommendations_filename,
-                                                        log,
-                                                        dataset,
-                                                        attack_size,
-                                                        filler_size)
+                                    # generate post-attack recommendations
+                                    if args.log:
+                                        log.append('Generating post-attack recommendations for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}, item {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size, item))
+
+
+                                    generateRecommendations((new_train_data, new_train_users, train_items),
+                                                            rs_model,
+                                                            similarity,
+                                                            similarity_dir,
+                                                            recommendations_filename,
+                                                            log,
+                                                            dataset,
+                                                            attack_size,
+                                                            filler_size,
+                                                            False)
+                                    
+                                    breakpoint_pbar.update(1)
+
 
                     print('Post attack Recommendations generated for dataset {}, similarity measure {}, recommender system {}'.format(dataset, similarity, rs_model))
                     if args.send_mail:
                         sendmail(SUBJECT, 'Post attack Recommendations generated for dataset {}, similarity measure {}, recommender system {}'.format(dataset, similarity, rs_model))
 
-
+        breakpoint_pbar.close()
         BREAKPOINT = 7
         print('BREAKPOINT 7')
         bigskip()
@@ -599,8 +695,18 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 # so far we have generated post-attack recommendations
 # now, we will calculate hit ratio and generate graphs
 
-                        # (calculate hit ratio and generate graphs)
+    # (calculate hit ratio and generate graphs)
+    if BREAKPOINT < 8 and 8 in SKIP_BREAKS:
+        BREAKPOINT = 8
+        print('Skipping breakpoint {}'.format(BREAKPOINT))
+        bigskip()
+        if args.log:
+            log.append('Skipping breakpoint {}'.format(BREAKPOINT))
+            log.append('\n\n\n')
     if BREAKPOINT < 8:  # ------------------------------------------------------------------------------------ breakpoint 8
+        
+        breakpoint_pbar = tqdm(total=len(DATASETS)*len(RS_MODELS)*len(SIMILARITY_MEASURES)*len(ATTACKS)*(len(ATTACK_SIZES) + len(FILLER_SIZES) - 1), desc='Breakpoint 8')
+        
         for dataset in DATASETS:
             if dataset in all_currentdir.keys():
                 currentdir = all_currentdir[dataset]
@@ -638,8 +744,8 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                                 if (attack_size != ATTACK_SIZE_PERCENTAGE) and (filler_size != FILLER_SIZE_PERCENTAGE):
                                     continue
 
-                                post_attack_recommendations_filename = recommendations_dir + attack + '/post_attack_{}_{}_{}_recommendations.csv'.format(similarity, attack_size, filler_size)
-                                post_attack_hit_ratio = hit_ratio(recommendations_filename = post_attack_recommendations_filename,
+                                post_attack_recommendations_filename = recommendations_dir + attack + '/post_attack_{}_{}_{}_{}_recommendations.csv'.format(similarity, attack_size, filler_size, {})
+                                post_attack_hit_ratio = new_hit_ratio(recommendations_filename = post_attack_recommendations_filename,
                                                                 target_items = target_items,
                                                                 among_firsts=TOP_Ns,
                                                                 log = log)
@@ -647,6 +753,8 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                                 post_attack_hit_ratio['attack_size'] = attack_size
                                 post_attack_hit_ratio['filler_size'] = filler_size
                                 hit_ratios = pd.concat([hit_ratios, post_attack_hit_ratio], ignore_index=True)
+
+                                breakpoint_pbar.update(1)
 
 
                     hit_ratio_filename = hit_ratio_dir + 'post_attack_{}_hit_ratio.csv'.format(similarity)
@@ -711,6 +819,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
         if args.send_mail:
             sendmail(SUBJECT, 'Evaluations done for post-attack recommendations')
 
+        breakpoint_pbar.close()
         BREAKPOINT = 8
         print('BREAKPOINT 8')
         bigskip()
@@ -723,6 +832,8 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 # generate post-detection recommendations
 # calculate hit ratio for post-detection recommendations
 
+
+    noti.balloon_tip(SUBJECT, 'Experiment done')
     pass
 
 

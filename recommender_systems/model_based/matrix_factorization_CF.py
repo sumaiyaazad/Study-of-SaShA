@@ -73,7 +73,7 @@ class MatrixFactorizationCF:
             self.log.append('Starting training matrix factorization model')
             start_time = time.time()
 
-        for i in tqdm(range(self.iterations)):
+        for i in tqdm(range(self.iterations), leave=False):
             np.random.shuffle(self.samples)
             self.sgd()
             mse = self.mse()
@@ -221,7 +221,7 @@ class MatrixFactorizationCF:
 
         with open(output_path, "w") as f:
             f.write("user_id,item_id,rating\n")
-            for user_id in tqdm(self.train_users.keys()):
+            for user_id in tqdm(self.train_users.keys(), leave=False):
                 items = self.get_recommendations(self.train_users[user_id], n)
                 for item in items:
                     f.write(str(user_id) + "," + str(items_rev[item]) + "," + str(self.clamp(self.get_rating(self.train_users[user_id], item))) + "\n")

@@ -177,17 +177,11 @@ def load_kg_yahoo_movies(items, feature_type='ontological'):
     kg['feature'] = kg['feature'].astype('int64')
     kg['item_id'] = kg['item_id'].astype('int64')
 
-    print('kg shape: ', kg.shape)
-
     # remove features not in selected_features
     kg = kg[kg['feature'].isin(selected_features)]
 
-    print('kg shape after removing features not in selected_features: ', kg.shape)
-
     # remove kg entries of items not in items
     kg = kg[kg['item_id'].isin(items['item_index'])]
-
-    print('kg shape after removing kg entries of items not in items: ', kg.shape)
 
     kg.drop(['item_index_discard'], axis=1, inplace=True)
     kg.drop(['value'], axis=1, inplace=True)
@@ -296,17 +290,11 @@ def load_kg_SmallLibraryThing(items, feature_type='ontological'):
     kg['feature'] = kg['feature'].astype('int64')
     kg['item_id'] = kg['item_id'].astype('int64')
 
-    print('kg shape: ', kg.shape)
-
     # remove features not in selected_features
     kg = kg[kg['feature'].isin(selected_features)]
 
-    print('kg shape after removing features not in selected_features: ', kg.shape)
-
     # remove kg entries of items not in items
     kg = kg[kg['item_id'].isin(items['item_index'])]
-
-    print('kg shape after removing kg entries of items not in items: ', kg.shape)
 
     kg.drop(['item_index_discard'], axis=1, inplace=True)
     kg.drop(['value'], axis=1, inplace=True)

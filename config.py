@@ -1,21 +1,18 @@
 # global
 SEED = 2023
 DATADIR = './data/'
-# DATASETS = ['dummy']
-# DATASETS = ['yahoo_movies']
-# DATASETS = ['ml-1m']
-DATASETS = ['yahoo_movies', 'SmallLibraryThing']
+
+# skip small library thing for now
+DATASETS = ['yahoo_movies']
+# DATASETS = ['yahoo_movies', 'SmallLibraryThing']
 OUTDIR = './output/'
-# ATTACKS = ['random']
 ATTACKS_BASE = ['random', 'average']
-# ATTACKS_SEMANTIC = ['sasha_random']
 ATTACKS_SEMANTIC = ['sasha_random', 'sasha_average']
 ATTACKS = ATTACKS_BASE + ATTACKS_SEMANTIC
 
-# RS_MODELS = ['mfcf', 'ubcf']
-RS_MODELS = ['mfcf', 'ibcf', 'ubcf']
+RS_MODELS = ['mfcf']
+# RS_MODELS = ['mfcf', 'ibcf', 'ubcf']
 SIMILARITY_MEASURES = ['cosine']
-# SIMILARITY_MEASURES = ['cosine', 'jaccard', 'pearson', 'adjusted_cosine']
 EVALUATIONS = ['hit_ratio', 'pred_shift']
 DETECTIONS = []
 TRAIN_SIZE = 0.8
@@ -27,15 +24,14 @@ TOP_Ns = [10, 20, 30, 40, 50]   # top-N recommendation
 
 FILLER_SIZE_PERCENTAGE = 1       # fraction of average number of ratings per user
 ATTACK_SIZE_PERCENTAGE = 0.05    # 5% of the target user/item ratings will be attacked
-# ATTACK_SIZE_PERCENTAGE = 0.03    # 3% of the target user/item ratings will be attacked
-ATTACK_SIZES = [0.01, 0.02, 0.03, 0.04, 0.05] # 1%, 2%, 3%, 4%, 5% of the target user/item ratings will be attacked
-FILLER_SIZES = [0.5, 1, 1.5, 2, 2.5]       # 0.5, 1, 1.5, 2, 2.5, 3 times of the average number of ratings per user
+ATTACK_SIZES = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07] # 1%, 2%, 3%, 4%, 5% of the target user/item ratings will be attacked
+FILLER_SIZES = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4]       # 0.5, 1, 1.5, 2, 2.5, 3 times of the average number of ratings per user
 
-# ATTACK_SIZES = [ATTACK_SIZE_PERCENTAGE]
-# FILLER_SIZES = [FILLER_SIZE_PERCENTAGE]
+# skip post attack hit ratio for now
+SKIP_BREAKS = [8]
 
 
-NUM_TARGET_ITEMS = 50   
+NUM_TARGET_ITEMS = 10
 
 RATING_RANGE = {
     'ml-1m': (1, 5),
@@ -52,10 +48,8 @@ EXP_NO = 0
 BODY = 'Experiment done. sending a copy of the log file'
 
 # ----------------------------------------------- Data Loader -----------------------------------------------
-# ml-1m
 COLD_START_THRESHOLD = 5 # to avoid cold start drop users with less than 5 ratings and items with less than 5 ratings [ref: https://link.springer.com/chapter/10.1007/978-3-030-49461-2_18]
 SAMPLE_FRAC = 0.25 # randomly sample 25% of the data [ref: https://link.springer.com/chapter/10.1007/978-3-030-49461-2_18]
-# SAMPLE_FRAC = 0.01 # randomly sample 25% of the data [ref: https://link.springer.com/chapter/10.1007/978-3-030-49461-2_18]
 
 
 # ----------------------------------------------- RS models -----------------------------------------------
@@ -66,11 +60,9 @@ BETA = 0.02
 MAX_ITER = 100
 
 # ibcf: item-based collaborative filtering
-# IKNN = 2
 IKNN = 10
 
 # ubcf: user-based collaborative filtering
-# UKNN = 2
 UKNN = 10
 
 

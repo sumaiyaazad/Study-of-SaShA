@@ -69,19 +69,27 @@ class ItemBasedCF:
 
         print('*'*10, 'Saving similarities...', '*'*10)
 
-        # convert to list of tuples
-        iisim = []
-
-        for item1 in tqdm(self.train_items['item_id'].unique()):
-            for item2 in self.train_items['item_id'].unique():
-                if item1 != item2:
-                    iisim.append([item1, item2, self.item_item_similarity[item1][item2]])
-
-        # to dataframe
-        iisim = pd.DataFrame(iisim, columns=['item1', 'item2', 'similarity'])
-
         # save as csv
-        iisim.to_csv(self.similarities_filename, index=False)
+        with open(self.similarities_filename, 'w') as f:
+            f.write('item1,item2,similarity\n')
+            for item1 in tqdm(self.train_items['item_id'].unique(), leave=False):
+                for item2 in self.train_items['item_id'].unique():
+                    if item1 != item2:
+                        f.write('{},{},{}\n'.format(item1, item2, self.item_item_similarity[item1][item2]))
+
+        # # convert to list of tuples
+        # iisim = []
+
+        # for item1 in tqdm(self.train_items['item_id'].unique()):
+        #     for item2 in self.train_items['item_id'].unique():
+        #         if item1 != item2:
+        #             iisim.append([item1, item2, self.item_item_similarity[item1][item2]])
+
+        # # to dataframe
+        # iisim = pd.DataFrame(iisim, columns=['item1', 'item2', 'similarity'])
+
+        # # save as csv
+        # iisim.to_csv(self.similarities_filename, index=False)
 
         if self.log is not None:
             self.log.append('Similarities saved to {}'.format(self.similarities_filename))
@@ -118,7 +126,7 @@ class ItemBasedCF:
         for item in self.train_items['item_id'].unique():
             self.item_item_similarity.setdefault(item, {})
             
-        for item1, item2, sim in tqdm(iisim_df.values):
+        for item1, item2, sim in tqdm(iisim_df.values, leave=False):
             self.item_item_similarity[item1][item2] = sim
             self.item_item_similarity[item2][item1] = sim
 
@@ -143,7 +151,7 @@ class ItemBasedCF:
         for item in self.train_items['item_id']:
             self.itemUserMatrix.setdefault(item, {})
 
-        for index, datapoint in tqdm(self.train_data.iterrows()):
+        for index, datapoint in tqdm(self.train_data.iterrows(), leave=False):
             self.itemUserMatrix.setdefault(datapoint['item_id'], {})
             self.itemUserMatrix[datapoint['item_id']][datapoint['user_id']] = datapoint['rating']
 
@@ -173,7 +181,7 @@ class ItemBasedCF:
             print('*'*10, 'Creating item-item similarity matrix...', '*'*10)
             start_time = time.time()
 
-        for item1 in tqdm(self.train_items['item_id'].unique()):
+        for item1 in tqdm(self.train_items['item_id'].unique(), leave=False):
             self.item_item_similarity.setdefault(item1, {})
             for item2 in self.train_items['item_id'].unique():
                 if item1 != item2:
@@ -252,7 +260,7 @@ class ItemBasedCF:
             start_time = time.time()
         
         self.recommendations = {}
-        for user in tqdm(self.train_users['user_id']):
+        for user in tqdm(self.train_users['user_id'], leave=False):
             self.recommendations[user] = self.getRecommendations(user, n_neighbors=n_neighbors)
         
         if verbose:

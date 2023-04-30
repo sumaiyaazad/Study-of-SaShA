@@ -81,3 +81,50 @@ def hit_ratio(recommendations_filename, target_items, among_firsts, verbose=Fals
 
     return hit_df
 
+
+def new_hit_ratio(recommendations_filename, target_items, among_firsts, verbose=False, log=None):
+    """
+    :param recommendations_filename: filename of the recommendations file
+    :param target_items: list of target items
+    :param verbose: print the hit ratio
+    :param log: log the hit ratio, object of the logger class
+
+    :return: pandas dataframe with the hit ratio for each among_first
+    """
+
+    if verbose:
+        print("Calculating hit ratio...")
+        start = time.time()
+
+    if log is not None:
+        log.append("Starting hit ratio calculation")
+
+    hit_df = pd.DataFrame(columns=['among_first', 'hit_ratio'])
+
+    for among_first in among_firsts:
+        hits = 0
+        for item in target_items:
+
+            recommendations = pd.read_csv(recommendations_filename.format(item))
+            recommendations.columns = ['user_id', 'item_id', 'rating']
+            grouped = recommendations.groupby('user_id', group_keys=True).apply(lambda x: x.sort_values(['rating'], ascending=False))
+            grouped.drop('user_id', axis=1, inplace=True)
+
+            tot_users = recommendations.user_id.nunique()
+        
+            all_hit_counts = grouped.groupby('user_id').head(among_first)['item_id'].value_counts()
+            hits += 0 if item not in all_hit_counts.index else all_hit_counts[item]
+        
+        hit_ratio = hits / (tot_users*len(target_items))
+        hit_df.loc[len(hit_df)] = [among_first, hit_ratio]
+
+    
+    if verbose:
+        print(hit_df)
+        print("Time: {0}".format(time.time() - start))
+
+    if log is not None:
+        log.append("Hit ratio calculation completed")
+    
+
+    return hit_df
