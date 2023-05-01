@@ -76,7 +76,7 @@ class SemanticAttack:
 
         items = self.data['item_id'].unique().tolist()
 
-        for item1 in tqdm(items):
+        for item1 in tqdm(items, leave=False, desc='kg similarity'):
             self.item_item_similarity.setdefault(item1, {})
             for item2 in items:
                 if item1 != item2:
@@ -125,7 +125,7 @@ class SemanticAttack:
         for item in items:
             self.item_item_similarity.setdefault(item, {})
             
-        for item1, item2, sim in tqdm(iisim_df.values):
+        for item1, item2, sim in tqdm(iisim_df.values, leave=False, desc='kg similarity loading', disable=not verbose):
             self.item_item_similarity[item1][item2] = sim
             self.item_item_similarity[item2][item1] = sim
 
@@ -162,7 +162,7 @@ class SemanticAttack:
 
         items = self.data['item_id'].unique().tolist()
 
-        for item1 in tqdm(items):
+        for item1 in tqdm(items, leave=False, desc='kg similarity saving', disable=not verbose):
             for item2 in items:
                 if item1 != item2:
                     iisim.append([item1, item2, self.item_item_similarity[item1][item2]])
@@ -218,12 +218,10 @@ class SemanticAttack:
         sim_df['item_id'] = sim_df['item_id'].astype(int)
 
         if most:
-            # here might be a bug (sample or 1-sample) ???
-            q1 = np.quantile(sim_df['similarity'], sample)
+            q1 = np.quantile(sim_df['similarity'], 1-sample)
             similar = sim_df[sim_df['similarity'] >= q1]['item_id'].tolist()
         else:
-            # here might be a bug (sample or 1-sample) ???
-            q1 = np.quantile(sim_df['similarity'], 1-sample)
+            q1 = np.quantile(sim_df['similarity'], sample)
             similar = sim_df[sim_df['similarity'] <= q1]['item_id'].tolist()
 
         return similar

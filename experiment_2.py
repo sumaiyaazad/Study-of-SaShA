@@ -441,7 +441,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 
                         # launch attacks ---------------------------------------------------------------------------------------
 
-                        print('Generating {} attack profiles with attack size {} and filler size {} for dataset {}'.format(attack, attack_size, filler_size, dataset))
+                        # print('Generating {} attack profiles with attack size {} and filler size {} for dataset {}'.format(attack, attack_size, filler_size, dataset))
                         if args.log:
                             log.append('Generating {} attack profiles with attack size {} and filler size {} for dataset {}'.format(attack, attack_size, filler_size, dataset))
 
@@ -471,7 +471,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 
                         breakpoint_pbar.update(1)
                     
-                        print('{} attack profiles with attack size {} and filler size {} for dataset {} generated'.format(attack, attack_size, filler_size, dataset))
+                        # print('{} attack profiles with attack size {} and filler size {} for dataset {} generated'.format(attack, attack_size, filler_size, dataset))
                         if args.log:
                             log.append('{} attack profiles with attack size {} and filler size {} for dataset {} generated'.format(attack, attack_size, filler_size, dataset))
 
@@ -875,7 +875,7 @@ def main():
         next_version = 1
 
     BREAKPOINT = 0
-    if args.breakpoint > 0:
+    if args.breakpoint > 0 or args.version > 0:
         next_version = args.version
         BREAKPOINT = args.breakpoint
 
