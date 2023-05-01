@@ -198,10 +198,11 @@ class SemanticAttack:
         """
         return max(self.r_min, min(x, self.r_max))
     
-    def get_similar_items(self, item_id, sample, verbose=False):
+    def get_similar_items(self, item_id, sample, most=True, verbose=False):
         """
         :param item_id: the item id to find similar items for
         :param sample: the sample to find similar items for
+        :param most: if True, return the most similar items, else return the least similar items
 
         :return: a list of similar items from {sample} quantile of the similarity distribution
 
@@ -213,8 +214,13 @@ class SemanticAttack:
         sim_df = pd.DataFrame(self.item_item_similarity[item_id].items(), columns=['item_id', 'similarity'])
         sim_df['item_id'] = sim_df['item_id'].astype(int)
 
-
-        q1 = np.quantile(sim_df['similarity'], sample)
-        similar = sim_df[sim_df['similarity'] >= q1]['item_id'].tolist()
+        if most:
+            # here might be a bug (sample or 1-sample) ???
+            q1 = np.quantile(sim_df['similarity'], sample)
+            similar = sim_df[sim_df['similarity'] >= q1]['item_id'].tolist()
+        else:
+            # here might be a bug (sample or 1-sample) ???
+            q1 = np.quantile(sim_df['similarity'], 1-sample)
+            similar = sim_df[sim_df['similarity'] <= q1]['item_id'].tolist()
 
         return similar

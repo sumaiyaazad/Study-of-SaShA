@@ -21,6 +21,8 @@ from attacks.average import *
 
 from attacks.semantic_attack import SemanticAttack
 from attacks.sasha_random import SAShA_RandomAttack
+from attacks.sasha_average import SAShA_AverageAttack
+from attacks.sasha_segment import SAShA_SegmentAttack
 
 from recommender_systems.memory_based.item_based_CF import ItemBasedCF
 from recommender_systems.memory_based.user_based_CF import UserBasedCF
@@ -545,7 +547,6 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 
                         # create attack object
                         if attack == 'sasha_random':
-                            attack_generator = RandomAttack(train_data, r_max, r_min, attack_size, filler_size)
                             attack_generator = SAShA_RandomAttack(  data=train_data, 
                                                                     r_max=r_max,
                                                                     r_min=r_min,
@@ -556,7 +557,23 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                                                                     filler_size_percentage=filler_size)
 
                         elif attack == 'sasha_average':
-                            attack_generator = AverageAttack(train_data, r_max, r_min, attack_size, filler_size)
+                            attack_generator = SAShA_AverageAttack( data=train_data,
+                                                                    r_max=r_max,
+                                                                    r_min=r_min,
+                                                                    similarity=KG_SIMILARITY,
+                                                                    kg_item_feature_matrix=item_feature_matrix,
+                                                                    similarity_filelocation=similarity_filelocation,
+                                                                    attack_size_percentage=attack_size,
+                                                                    filler_size_percentage=filler_size)
+                        elif attack == 'sasha_segment':
+                            attack_generator = SAShA_SegmentAttack( data=train_data,
+                                                                    r_max=r_max,
+                                                                    r_min=r_min,
+                                                                    similarity=KG_SIMILARITY,
+                                                                    kg_item_feature_matrix=item_feature_matrix,
+                                                                    similarity_filelocation=similarity_filelocation,
+                                                                    attack_size_percentage=attack_size,
+                                                                    filler_size_percentage=filler_size)
                         else:
                             raise ValueError('Attack not found.')
 

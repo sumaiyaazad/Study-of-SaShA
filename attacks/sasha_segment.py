@@ -11,7 +11,7 @@ np.random.seed(cfg.SEED)
 random.seed(cfg.SEED)
 
 
-class SAShA_AverageAttack(SemanticAttack):
+class SAShA_SegmentAttack(SemanticAttack):
     def __init__(self, 
                  data, 
                  r_max, 
@@ -21,10 +21,11 @@ class SAShA_AverageAttack(SemanticAttack):
                  similarity_filelocation,
                  attack_size_percentage=cfg.ATTACK_SIZE_PERCENTAGE, 
                  filler_size_percentage=cfg.FILLER_SIZE_PERCENTAGE, 
+                 select_size_percentage=cfg.SELECT_SIZE_PERCENTAGE,
                  push=cfg.PUSH,
                  log=None):
 
-        super(SAShA_AverageAttack, self).__init__(data, 
+        super(SAShA_SegmentAttack, self).__init__(data, 
                                                 r_max, 
                                                 r_min, 
                                                 similarity,
@@ -35,7 +36,7 @@ class SAShA_AverageAttack(SemanticAttack):
                                                 push,
                                                 log)
         
-        
+        self.select_size_percentage = select_size_percentage
         self.fillerSize = self.get_filler_size()
         self.selectedSize = self.get_selected_size()
         self.attackSize = self.get_attack_size()
@@ -45,13 +46,9 @@ class SAShA_AverageAttack(SemanticAttack):
         """
         Generates the shilling profiles
         :param target_items: the target items
-        :param sample: first fraction of the most similar items to be selected as filler items
+        :param sample: first fraction of the most and least similar items to be selected as selected and filler items respectively
         :param output_filename: the output filename, where shilling profiles are saved
         """
-        
-        # mean of the ratings in the dataset for items
-        items_mean = self.data.groupby('item_id')['rating'].mean()
-        items_mean.name = 'mean_ratings'
 
         start_shilling_user_id = max(list(self.data.user_id.unique()))
         shilling_profiles = []
@@ -59,16 +56,22 @@ class SAShA_AverageAttack(SemanticAttack):
         for target_item_id in (tqdm(target_items, leave=False) if verbose else target_items):
             for i in range(self.attackSize):
                 start_shilling_user_id += 1
-                # ADD SELECTED: Will Be Empty
-                selected_items = self.get_selected_items(target_item_id)
+                # ADD SELECTED: First fraction of the most similar items to the target item, rated max
+                selected_items = self.get_selected_items(target_item_id, sample)
+                for selected_item_id in selected_items:
+                    shilling_profiles.append([
+                        start_shilling_user_id,
+                        selected_item_id,
+                        self.r_max
+                    ])
 
-                # ADD FILLER:   AVERAGE: Mean rating of the filler items in the system
+                # ADD FILLER: First fraction of the least similar items to the target item, rated min
                 filler_items = self.get_filler_items(selected_items, target_item_id, sample)
                 for filler_item_id in filler_items:
                     shilling_profiles.append([
                         start_shilling_user_id,
                         filler_item_id,
-                        self.clamp(int(items_mean.loc[filler_item_id]))
+                        self.r_min
                     ])
 
                 # ADD TARGET ITEM with Rating (Max for Push/mn for Nuke)
@@ -84,46 +87,25 @@ class SAShA_AverageAttack(SemanticAttack):
         shilling_profiles.to_csv(output_filename, index=False)
 
 
-    def get_filler_items(self, selectedItems, target_item_id, sample):
-        """
-        randomly select from the items that are not in the selected items
-
-        :param target_item_id: Target Item ID
-        :param selectedItems: List of Already Selected Items
-        :param sample: first fraction of the most similar items to be selected as filler items
-        :return: list of filler items RANDOMLY CHOSEN from sample
-        """
-        selectedItems.append(target_item_id)
-
-        # Get Similar Items
-        similar_items = np.array(self.get_similar_items(target_item_id, sample))
-        # Remove Selected Items
-        # similar_items = np.setdiff1d(similar_items, selectedItems)
-        
-        similar_items = similar_items[~np.isin(similar_items, selectedItems)]
-        items = random.choices(similar_items, k=self.fillerSize)
-
-        return items
-
-    def get_selected_items(self, target_item_id):
-        """
-        no selected items required for random attack
-        :return: List of Selected Items: EMPTY
-        """
-        return []
-    
     def get_filler_size(self):
         """
-        average number of items rated by users in the dataset
-        |I_{F}|= #_of_all_ratings/|U| - 1
-        :return: Filler Size
+        Returns the size of the filler items
         """
-        fillerSize = int((self.data.shape[0] / self.data.user_id.nunique() - 1)*self.fillerSizePercentage)
+
+        
+        fillerSize = int((self.data.shape[0] / self.data.user_id.nunique() - 1)*self.fillerSizePercentage * (1 - self.select_size_percentage))
 
         return fillerSize
     
     def get_selected_size(self):
-        return 0
+        """
+        Returns the size of the selected items
+        """
+        
+        selectedSize = int((self.data.shape[0] / self.data.user_id.nunique() - 1)*self.fillerSizePercentage * self.select_size_percentage)
+
+
+        return selectedSize
     
     def get_attack_size(self):
         """
@@ -131,6 +113,42 @@ class SAShA_AverageAttack(SemanticAttack):
         """
         attackSize = int(self.data.user_id.nunique() * self.attackSizePercentage)
         return attackSize
-   
+    
+    def get_filler_items(self, selectedItems, target_item_id, sample):
+        """
+        randomly select from the items that are not in the selected items
 
+        :param target_item_id: Target Item ID
+        :param selectedItems: List of Already Selected Items
+        :param sample: first fraction of the least similar items to be selected as filler items
+        :return: list of filler items RANDOMLY CHOSEN from sample
+        """
+        selectedItems.append(target_item_id)
+
+        # Get least Similar Items
+        similar_items = np.array(self.get_similar_items(target_item_id, sample, False))
+        # Remove Selected Items
+        
+        similar_items = similar_items[~np.isin(similar_items, selectedItems)]
+        items = random.choices(similar_items, k=self.fillerSize)
+
+        return items
+    
+    def get_selected_items(self, target_item_id, sample):
+        """
+        randomly select from the items that are not in the selected items
+
+        :param target_item_id: Target Item ID
+        :param sample: first fraction of the most similar items to be selected as selected items
+        :return: list of selected items RANDOMLY CHOSEN from sample
+        """
+
+        # Get least Similar Items
+        similar_items = np.array(self.get_similar_items(target_item_id, sample))
+        # Remove Selected Items
+        
+        similar_items = similar_items[~np.isin(similar_items, [target_item_id])]
+        items = random.choices(similar_items, k=self.selectedSize)
+
+        return items
     

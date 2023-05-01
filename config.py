@@ -3,7 +3,7 @@ SEED = 2023
 DATADIR = './data/'
 
 # skip small library thing for now
-DATASETS = ['yahoo_movies']
+DATASETS = ['SmallLibraryThing']
 # DATASETS = ['yahoo_movies', 'SmallLibraryThing']
 OUTDIR = './output/'
 ATTACKS_BASE = ['random', 'average']
@@ -76,6 +76,8 @@ SAMPLE = 0.25
 # ATTACK_SIZE_PERCENTAGE = 0.1
 # PUSH = True
 
+# sasha segment: segment attack
+SELECT_SIZE_PERCENTAGE = 0.5   # 50% of the attack profile size will be selected items, rest filler items
 
 # ----------------------------------------------- Detection -----------------------------------------------
 # mlp: multi-layer perceptron
