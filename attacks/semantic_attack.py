@@ -105,7 +105,8 @@ class SemanticAttack:
                 self.log.abort()
             raise ValueError('No filename given to load kg similarities')
 
-        print('*'*10, 'Loading kg similarities...', '*'*10)
+        if verbose:
+            print('*'*10, 'Loading kg similarities...', '*'*10)
 
         # load item-item similarity matrix
         try:
@@ -153,7 +154,8 @@ class SemanticAttack:
         if self.item_item_similarity is None:
             self.generate_similarity(verbose=verbose)
 
-        print('*'*10, 'Saving similarities...', '*'*10)
+        if verbose:
+            print('*'*10, 'Saving similarities...', '*'*10)
 
         # convert to list of tuples
         iisim = []
@@ -174,7 +176,8 @@ class SemanticAttack:
         if self.log is not None:
             self.log.append('Similarities saved to {}'.format(self.similarity_filelocation))
         
-        print('Similarities saved to {}'.format(self.similarity_filelocation))
+        if verbose:
+            print('Similarities saved to {}'.format(self.similarity_filelocation))
 
     @abstractmethod
     def generate_profile(self, target_item_id, sample, output_filename): raise NotImplementedError

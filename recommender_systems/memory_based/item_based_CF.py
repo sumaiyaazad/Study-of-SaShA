@@ -67,34 +67,16 @@ class ItemBasedCF:
         if self.item_item_similarity is None:
             self.getItemItemSimilarity(verbose=True)
 
-        print('*'*10, 'Saving similarities...', '*'*10)
-
         # save as csv
         with open(self.similarities_filename, 'w') as f:
             f.write('item1,item2,similarity\n')
-            for item1 in tqdm(self.train_items['item_id'].unique(), leave=False):
+            for item1 in tqdm(self.train_items['item_id'].unique(), leave=False, desc='Saving similarities ibcf'):
                 for item2 in self.train_items['item_id'].unique():
                     if item1 != item2:
                         f.write('{},{},{}\n'.format(item1, item2, self.item_item_similarity[item1][item2]))
 
-        # # convert to list of tuples
-        # iisim = []
-
-        # for item1 in tqdm(self.train_items['item_id'].unique()):
-        #     for item2 in self.train_items['item_id'].unique():
-        #         if item1 != item2:
-        #             iisim.append([item1, item2, self.item_item_similarity[item1][item2]])
-
-        # # to dataframe
-        # iisim = pd.DataFrame(iisim, columns=['item1', 'item2', 'similarity'])
-
-        # # save as csv
-        # iisim.to_csv(self.similarities_filename, index=False)
-
         if self.log is not None:
             self.log.append('Similarities saved to {}'.format(self.similarities_filename))
-        
-        print('Similarities saved to {}'.format(self.similarities_filename))
 
     def loadSimilarities(self, verbose=False):
 
@@ -108,13 +90,13 @@ class ItemBasedCF:
                 self.log.abort()
             raise ValueError('No filename given to load similarities')
 
-        print('*'*10, 'Loading similarities...', '*'*10)
+        if verbose:
+            print('Loading similarities ibcf from {}'.format(self.similarities_filename))
 
         # load as csv
         try:
             iisim_df = pd.read_csv(self.similarities_filename)
             iisim_df.columns = ['item1', 'item2', 'similarity']
-            # iisim_df = pd.read_csv(self.similarities_filename, header=None, names=['item1', 'item2', 'similarity'])
         except FileNotFoundError:
             print('WARNING:File not found. Similarities will be calculated and saved to {}'.format(self.similarities_filename))
             if self.log is not None:
@@ -260,7 +242,7 @@ class ItemBasedCF:
             start_time = time.time()
         
         self.recommendations = {}
-        for user in tqdm(self.train_users['user_id'], leave=False):
+        for user in tqdm(self.train_users['user_id'], leave=False, desc='Generating recommendations ibcf'):
             self.recommendations[user] = self.getRecommendations(user, n_neighbors=n_neighbors)
         
         if verbose:
@@ -284,7 +266,9 @@ class ItemBasedCF:
 
         with open(output_filename, "w") as f:
             f.write("user_id" + sep + "item_id" + sep + "rating" + "\n")
-            for user, items in self.recommendations.items():
+            # with tqdm
+            for user, items in tqdm(self.recommendations.items(), leave=False, desc='Saving recommendations ibcf'):
+            # for user, items in self.recommendations.items():
                 if top_n is not None:
                     # sort the items by rating (descending) and then by item id (ascending):    WILL IT WORK?
                     items = sorted(items, key=lambda x: (x[1],-x[0]), reverse=True)

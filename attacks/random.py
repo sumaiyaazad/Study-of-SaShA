@@ -70,8 +70,6 @@ class RandomAttack(BaseAttack):
         """
         fillerSize = int((self.data.shape[0] / self.data.user_id.nunique() - 1)*self.fillerSizePercentage)
 
-        # print('filler size', fillerSize, self.data.shape[0], self.data.user_id.nunique())
-
         return fillerSize
 
     def get_selected_size(self):

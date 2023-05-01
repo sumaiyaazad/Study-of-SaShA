@@ -37,12 +37,6 @@ def cosine_similarity(x, y):
     if np.sum(x) == 0 or np.sum(y) == 0:
         return 0
 
-    # print('x:', x)
-    # print('y:', y)
-        
-    # print(np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y)))
-    # print()
-
     return np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
 
 # jaccard similarity

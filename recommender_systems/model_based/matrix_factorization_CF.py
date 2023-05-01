@@ -73,7 +73,7 @@ class MatrixFactorizationCF:
             self.log.append('Starting training matrix factorization model')
             start_time = time.time()
 
-        for i in tqdm(range(self.iterations), leave=False):
+        for i in tqdm(range(self.iterations), leave=False, desc='Training mfcf'):
             np.random.shuffle(self.samples)
             self.sgd()
             mse = self.mse()
@@ -168,23 +168,6 @@ class MatrixFactorizationCF:
         predictions = self.full_matrix()[user_id, :]
         items = np.argsort(predictions)[::-1][:n]
         return items
-    
-    def save_model(self, path):
-        """
-        Save the model to a file
-        """
-        np.savez(path, b=self.b, b_u=self.b_u, b_i=self.b_i, W=self.W, H=self.H)
-
-    def load_model(self, path):
-        """
-        Load the model from a file
-        """
-        npzfile = np.load(path)
-        self.b = npzfile["b"]
-        self.b_u = npzfile["b_u"]
-        self.b_i = npzfile["b_i"]
-        self.W = npzfile["W"]
-        self.H = npzfile["H"]
 
     def save_full_matrix(self, path):
         """
@@ -221,7 +204,7 @@ class MatrixFactorizationCF:
 
         with open(output_path, "w") as f:
             f.write("user_id,item_id,rating\n")
-            for user_id in tqdm(self.train_users.keys(), leave=False):
+            for user_id in tqdm(self.train_users.keys(), leave=False, desc='Saving recommendations'):
                 items = self.get_recommendations(self.train_users[user_id], n)
                 for item in items:
                     f.write(str(user_id) + "," + str(items_rev[item]) + "," + str(self.clamp(self.get_rating(self.train_users[user_id], item))) + "\n")

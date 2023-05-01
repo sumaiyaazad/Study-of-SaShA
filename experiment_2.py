@@ -156,6 +156,8 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
             log.append('recommender system: {}'.format(RS_MODELS))
             log.append('similarity measure: {}'.format(SIMILARITY_MEASURES))
             log.append('attack: {}'.format(ATTACKS))
+            log.append('attack size: {}'.format(ATTACK_SIZES))
+            log.append('filler size: {}'.format(FILLER_SIZES))
             log.append('attack impact evaluation metrics: {}'.format(EVALUATIONS))
             log.append('detection: {}'.format(DETECTIONS))
             log.append('experiment start time: {}'.format(now()))
@@ -182,6 +184,8 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
             log.append('recommender system: {}'.format(RS_MODELS))
             log.append('similarity measure: {}'.format(SIMILARITY_MEASURES))
             log.append('attack: {}'.format(ATTACKS))
+            log.append('attack size: {}'.format(ATTACK_SIZES))
+            log.append('filler size: {}'.format(FILLER_SIZES))
             log.append('attack impact evaluation metrics: {}'.format(EVALUATIONS))
             log.append('detection: {}'.format(DETECTIONS))
             log.append('experiment start time: {}'.format(now()))
@@ -381,7 +385,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                     target_items = target_items['item_id'].tolist()
 
                     pre_attack_recommendations_filename = recommendations_dir + 'pre_attack_{}_recommendations.csv'.format(similarity)
-                    pre_attack_hit_ratio = hit_ratio(recommendations_filename = pre_attack_recommendations_filename,
+                    pre_attack_hit_ratio = new_hit_ratio(recommendations_filename = pre_attack_recommendations_filename,
                                                     target_items = target_items,
                                                     among_firsts=TOP_Ns,
                                                     log = log)
@@ -536,10 +540,6 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 
                         # launch attacks ---------------------------------------------------------------------------------------
 
-                        print('Generating {} attack profiles with attack size {} and filler size {} for dataset {}'.format(attack, attack_size, filler_size, dataset))
-                        if args.log:
-                            log.append('Generating {} attack profiles with attack size {} and filler size {} for dataset {}'.format(attack, attack_size, filler_size, dataset))
-
                         # load target items
                         target_items = pd.read_csv(currentdir + '{}_unpopular_items.csv'.format(NUM_TARGET_ITEMS))
                         target_items.columns = ['item_id', 'avg_rating']
@@ -589,9 +589,8 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                             attack_generator.generate_profile([item], SAMPLE, attack_profiles_filename)
                     
                         breakpoint_pbar.update(1)
-                        print('{} attack profiles with attack size {} and filler size {} for dataset {} generated'.format(attack, attack_size, filler_size, dataset))
-                        if args.log:
-                            log.append('{} attack profiles with attack size {} and filler size {} for dataset {} generated'.format(attack, attack_size, filler_size, dataset))
+                if args.log:
+                    log.append('{} attack profiles for dataset {} generated'.format(attack, dataset))
 
                         
 
@@ -665,8 +664,6 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 
                                     post_attack_dir = currentdir + 'post_attack_recommendations/' + similarity + '/' + rs_model + '/' + attack + '/'
                                     os.makedirs(post_attack_dir, exist_ok=True)
-                                    post_attack_filename = post_attack_dir + 'post_attack_recommendations_{}_{}_{}_{}_{}.csv'.format(attack_size, filler_size, item, similarity, rs_model) #
-
                                     
                                     # similarity files directory and filenames defination
                                     similarity_dir = currentdir + 'similarities/' + 'post_attack/' + attack + '/'
@@ -697,7 +694,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                                     breakpoint_pbar.update(1)
 
 
-                    print('Post attack Recommendations generated for dataset {}, similarity measure {}, recommender system {}'.format(dataset, similarity, rs_model))
+                    # print('Post attack Recommendations generated for dataset {}, similarity measure {}, recommender system {}'.format(dataset, similarity, rs_model))
                     if args.send_mail:
                         sendmail(SUBJECT, 'Post attack Recommendations generated for dataset {}, similarity measure {}, recommender system {}'.format(dataset, similarity, rs_model))
 
@@ -781,7 +778,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                         log.append('Hit ratio of post-attack recommendations calculated for {} with {} similarity for dataset {}'.format(rs_model, similarity, dataset))
                         log.append('Hit ratio of post-attack recommendations saved to {}'.format(hit_ratio_filename))
 
-                    print('Hit ratio of post-attack recommendations calculated for {} with {} similarity for dataset {}'.format(rs_model, similarity, dataset))
+                    # print('Hit ratio of post-attack recommendations calculated for {} with {} similarity for dataset {}'.format(rs_model, similarity, dataset))
 
                     # generate graphs   hit ratio vs attack size, fixed filler size
                     if args.log:
