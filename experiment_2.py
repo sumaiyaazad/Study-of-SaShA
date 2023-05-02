@@ -842,6 +842,57 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
             log.append('\n\n\n')
 
 # so far, we have calculated hit ratio for post-attack recommendations
+# now, inter attack comparison
+
+    # (inter attack comparison) hit ratio vs top_n, fixed attack size, fixed filler size
+    if BREAKPOINT < 9 and 9 in SKIP_BREAKS:
+        BREAKPOINT = 9
+        print('Skipping breakpoint {}'.format(BREAKPOINT))
+        bigskip()
+        if args.log:
+            log.append('Skipping breakpoint {}'.format(BREAKPOINT))
+            log.append('\n\n\n')
+    if BREAKPOINT < 9:  # ----------------------------------------------------------------------------------- breakpoint 9
+        for dataset in DATASETS:
+            if dataset in all_currentdir.keys():
+                currentdir = all_currentdir[dataset]
+            else:
+                currentdir = dirname + dataset + '/'
+                all_currentdir[dataset] = currentdir
+            
+            for similarity in SIMILARITY_MEASURES:
+                for rs_model in RS_MODELS:
+                    hit_ratio_dir = currentdir + rs_model + '/results/' + 'hit_ratio/'
+                    hit_ratio_filename = hit_ratio_dir + 'post_attack_{}_hit_ratio.csv'.format(similarity)
+
+                    hit_ratios = pd.read_csv(hit_ratio_filename)
+                    hit_ratios = hit_ratios[hit_ratios['attack_size'] == ATTACK_SIZE_PERCENTAGE]
+                    hit_ratios = hit_ratios[hit_ratios['filler_size'] == FILLER_SIZE_PERCENTAGE]
+                    # hit_ratios = hit_ratios[hit_ratios['among_first'] == TOP_N]
+
+                    graph_dir = currentdir + rs_model + '/graphs/'
+                    os.makedirs(graph_dir, exist_ok=True)
+                    
+                    graph_filename = graph_dir + 'hit_ratio_vs_top_{}.png'.format(TOP_N)
+                    for attack in ATTACKS:
+                        attack_hit_ratios = hit_ratios[hit_ratios['attack'] == attack]
+                        plt.plot(TOP_Ns, attack_hit_ratios['hit_ratio'].to_list(), label='{}'.format(attack))
+                    plt.axis('tight')
+                    plt.legend()
+                    plt.title('Hit ratio vs top_n, {} attack size, {} filler size'.format(ATTACK_SIZE_PERCENTAGE, FILLER_SIZE_PERCENTAGE))
+                    plt.xlabel('Top_n')
+                    plt.ylabel('Hit ratio')
+                    plt.savefig(graph_filename)
+                    plt.clf()
+
+        BREAKPOINT = 9
+        print('BREAKPOINT 9')
+        bigskip()
+        if args.log:
+            log.append('BREAKPOINT 9')
+            log.append('\n\n\n')
+
+# so far, inter attack comparison
 # now, we will detect attacks profiles
 # generate post-detection recommendations
 # calculate hit ratio for post-detection recommendations

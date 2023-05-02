@@ -12,9 +12,9 @@ DATASETS = ['yahoo_movies', 'SmallLibraryThing']
 OUTDIR = './output/'
 
 # done average
-ATTACKS_BASE = []
+# ATTACKS_BASE = []
 # ATTACKS_BASE = ['average']
-# ATTACKS_BASE = ['random', 'average']
+ATTACKS_BASE = ['random', 'average']
 ATTACKS_SEMANTIC = []
 # ATTACKS_SEMANTIC = ['sasha_random']
 ATTACKS_SEMANTIC = ['sasha_random', 'sasha_average', 'sasha_segment']
@@ -39,7 +39,7 @@ ATTACK_SIZES = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07] # 1%, 2%, 3%, 4%, 5% o
 FILLER_SIZES = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4]       # 0.5, 1, 1.5, 2, 2.5, 3 times of the average number of ratings per user
 
 # skip post attack hit ratio for now
-SKIP_BREAKS = [7, 8]
+SKIP_BREAKS = []
 
 
 NUM_TARGET_ITEMS = 10
