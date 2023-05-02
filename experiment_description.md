@@ -5,7 +5,7 @@
     -choose dataset
         -load data
         -list most popular items
-        -list most unpopular items
+        -list most unpopular items  -------------------------------------------------------------------------------------> breakpoint 2
 
         - for each target item
             -choose similarity measure
@@ -15,19 +15,19 @@
             -generate pre-attack similarities : save to file
 
             -choose recommender system
-                -generate pre-attack recommendations : save to file
-                -calculate pre-attack hit ratio : save to result
+                -generate pre-attack recommendations : save to file ------------------------------------------------------> breakpoint 3
+                -calculate pre-attack hit ratio : save to result    ------------------------------------------------------> breakpoint 4
 
                 -choose attack
                     -for each attack size (and fixed filler size)
                         -for each filler size (and best attack size)
-                            -generate attack profiles : save to file
+                            -generate attack profiles : save to file    --------------------------------------------------> breakpoint 5,6
                             -generate post-attack similarities : save to file
-                            -generate post-attack recommendations : save to file
+                            -generate post-attack recommendations : save to file    --------------------------------------> breakpoint 7
                             -calculate post-attack hit ratio : save to result
                             -calculate prediction shift with pre-attack recommendations : save to result
                     -generate graph of (prediction shift, hit ratio) vs attack size : save to result
-                    -generate graph of (prediction shift, hit ratio) vs filler size : save to result
+                    -generate graph of (prediction shift, hit ratio) vs filler size : save to result    ------------------> breakpoint 8,9
 
                     -choose best attack size and best filler size
                     -choose detection method (using best attack and filler size)
@@ -59,7 +59,7 @@
                         {item_item or user_user}_{similarity measure}.csv
                 attack_profiles
                     {attack}
-                        shilling_profiles_{attack size}_{filler size}.csv            > (user, item, rating)
+                        shilling_profiles_{attack size}_{filler size}_{target item}.csv            > (user, item, rating)
                         shilling_profiles_{attack size}_{filler size}_detected.csv   > tbd
                 {recommender system}
                     recommendations      

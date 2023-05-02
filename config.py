@@ -1,7 +1,3 @@
-# smlib , yahoo, 
-    # avg, rand
-        # ubcf
-
 # global
 SEED = 2023
 DATADIR = './data/'
