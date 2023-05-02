@@ -5,11 +5,11 @@
     -choose dataset
         -load data
         -list most popular items
-        -list most unpopular items  -------------------------------------------------------------------------------------> breakpoint 2
+        -list most unpopular items
 
         - for each target item
             -choose similarity measure
-            -generate similar items : save to file
+            -generate similar items : save to file  ----------------------------------------------------------------------> breakpoint 2
 
         -choose similarity measure
             -generate pre-attack similarities : save to file
