@@ -231,6 +231,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
             bigskip()
 
             if args.log:
+                log.append('\n\n\n')
                 log.append('number of users: {}'.format(len(train_users)))
                 log.append('number of items: {}'.format(len(train_items)))
                 log.append('number of ratings: {}'.format(len(train_data)))
@@ -991,7 +992,7 @@ if __name__ == '__main__':
     parser.add_argument('--noti_level', type=int, default=0, help='notification level, 0: no notification, 1: only at the end, 2: at verbose mode')
     parser.add_argument('--log', type=bool, default=True, help='log mode')
     parser.add_argument('--breakpoint', type=int, default=0, help='breakpoint, 0: no breakpoint, else: left off at breakpoint')
-    parser.add_argument('--version', type=int, default=0, help='experiment version, 0: new experiment, else: old experiment version number')
+    parser.add_argument('--version', type=int, default=EXP_NO, help='experiment version, config EXP_NO: new experiment, else: old experiment version number')
 
     parser.add_argument('--send_mail', action='store_true')
     parser.add_argument('--dont_mail', dest='send_mail', action='store_false')
@@ -999,6 +1000,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    start_time = time.time()
     main()
+    print('Total time: ', time.time() - start_time)
 
 
