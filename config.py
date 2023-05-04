@@ -8,11 +8,11 @@ DATASETS = ['yahoo_movies']
 OUTDIR = './output/'
 
 # done average
-# ATTACKS_BASE = []
-ATTACKS_BASE = ['random']
+ATTACKS_BASE = []
+# ATTACKS_BASE = ['average']
 # ATTACKS_BASE = ['random', 'average']
 ATTACKS_SEMANTIC = []
-# ATTACKS_SEMANTIC = ['sasha_random']
+ATTACKS_SEMANTIC = ['sasha_segment']
 # ATTACKS_SEMANTIC = ['sasha_random', 'sasha_average', 'sasha_segment']
 ATTACKS = ATTACKS_BASE + ATTACKS_SEMANTIC
 

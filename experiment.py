@@ -801,7 +801,11 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                     # concatenate in one dataframe and save to csv
                     
                     
-                    hit_ratios = pd.DataFrame(columns = ['attack', 'attack_size', 'filler_size', 'hit_ratio'])
+                    hit_ratio_filename = hit_ratio_dir + 'post_attack_{}_hit_ratio.csv'.format(similarity)
+                    try:
+                        hit_ratios = pd.read_csv(hit_ratio_filename)
+                    except:
+                        hit_ratios = pd.DataFrame(columns = ['attack', 'attack_size', 'filler_size', 'hit_ratio'])
 
                     for attack in ATTACKS:
                         for attack_size in ATTACK_SIZES:
@@ -847,7 +851,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                     
                     attack_size_hit_ratios = hit_ratios[hit_ratios['filler_size'] == FILLER_SIZE_PERCENTAGE]
                     for attack in ATTACKS:
-                        graph_filename = graph_dir + '{}_attack_size_vs_hit_ratio.png'.format(attack)
+                        graph_filename = graph_dir + 'hit_ratio_vs_{}_attack_size.png'.format(attack)
 
                         # filter hit ratios for current attack
                         attack_hit_ratio = attack_size_hit_ratios[attack_size_hit_ratios['attack'] == attack]
@@ -856,9 +860,12 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                             # filter hit ratios for current top_n
                             current_hit_ratios_for_topn = attack_hit_ratio[attack_hit_ratio['among_first'] == top_n]  # top_n is  among_first
                             plt.plot(ATTACK_SIZES, current_hit_ratios_for_topn['hit_ratio'].to_list(), label='top {}'.format(top_n))
+
+                        plt.plot([], [], ' ', label='{} similarity'.format(similarity))
+                        plt.plot([], [], ' ', label='filler size {}'.format(FILLER_SIZE_PERCENTAGE))
                         plt.axis('tight')
-                        plt.legend()
-                        plt.title('{} attack, {} similarity, filler size {}'.format(attack, similarity, FILLER_SIZE_PERCENTAGE))
+                        plt.legend(loc="upper left", bbox_to_anchor=(1.05,1))
+                        plt.title('hit ratio vs {} attack size'.format(attack))
                         plt.xlabel('Attack size')
                         plt.ylabel('Hit ratio')
                         plt.savefig(graph_filename)
@@ -870,7 +877,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                         log.append('Generating graphs for hit ratio vs filler size, fixed attack size for {} with {} similarity for dataset {}'.format(rs_model, similarity, dataset))
                     filler_hit_ratios = hit_ratios[hit_ratios['attack_size'] == ATTACK_SIZE_PERCENTAGE]
                     for attack in ATTACKS:
-                        graph_filename = graph_dir + '{}_filler_size_vs_hit_ratio.png'.format(attack)
+                        graph_filename = graph_dir + 'hit_ratio_vs_{}_filler_size.png'.format(attack)
 
                         # filter hit ratios for current attack
                         current_hit_ratios = filler_hit_ratios[filler_hit_ratios['attack'] == attack]
@@ -880,9 +887,11 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                             current_hit_ratios_for_topn = current_hit_ratios[current_hit_ratios['among_first'] == top_n]  # top_n is  among_first
 
                             plt.plot(FILLER_SIZES, current_hit_ratios_for_topn['hit_ratio'].to_list(), label='top {}'.format(top_n))
+                        plt.plot([], [], ' ', label='{} similarity'.format(similarity))
+                        plt.plot([], [], ' ', label='attack size {}'.format(ATTACK_SIZE_PERCENTAGE))
                         plt.axis('tight')
-                        plt.legend()
-                        plt.title('{} attack, {} similarity, attack size {}'.format(attack, similarity, ATTACK_SIZE_PERCENTAGE))
+                        plt.legend(loc="upper left", bbox_to_anchor=(1.05,1))
+                        plt.title('hit ratio vs {} filler size'.format(attack))
                         plt.xlabel('Filler size')
                         plt.ylabel('Hit ratio')
                         plt.savefig(graph_filename)
@@ -936,7 +945,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                         attack_hit_ratios = hit_ratios[hit_ratios['attack'] == attack]
                         plt.plot(TOP_Ns, attack_hit_ratios['hit_ratio'].to_list(), label='{}'.format(attack))
                     plt.axis('tight')
-                    plt.legend()
+                    plt.legend(loc="upper left", bbox_to_anchor=(1.05,1))
                     plt.title('Hit ratio vs top_n, {} attack size, {} filler size'.format(ATTACK_SIZE_PERCENTAGE, FILLER_SIZE_PERCENTAGE))
                     plt.xlabel('Top_n')
                     plt.ylabel('Hit ratio')

@@ -107,10 +107,11 @@ class UserBasedCF:
             uusim_df = pd.read_csv(self.similarities_filename)
             uusim_df.columns = ['user1', 'user2', 'similarity']
         except FileNotFoundError:
-            print('WARNING:File not found. Similarities will be calculated and saved to {}'.format(self.similarities_filename))
+            if verbose:
+                print('WARNING:File not found. Similarities will be calculated and saved to {}'.format(self.similarities_filename))
             if self.log is not None:
                 self.log.append('WARNING:File not found. Similarities will be calculated and saved to {}'.format(self.similarities_filename))
-            self.getUserUserSimilarity(verbose=True)
+            self.getUserUserSimilarity(verbose=verbose)
             return
         
         self.user_user_similarity = {}

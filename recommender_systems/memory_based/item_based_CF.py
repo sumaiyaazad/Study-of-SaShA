@@ -98,10 +98,11 @@ class ItemBasedCF:
             iisim_df = pd.read_csv(self.similarities_filename)
             iisim_df.columns = ['item1', 'item2', 'similarity']
         except FileNotFoundError:
-            print('WARNING:File not found. Similarities will be calculated and saved to {}'.format(self.similarities_filename))
+            if verbose:
+                print('WARNING:File not found. Similarities will be calculated and saved to {}'.format(self.similarities_filename))
             if self.log is not None:
                 self.log.append('WARNING:File not found. Similarities will be calculated and saved to {}'.format(self.similarities_filename))
-            self.getItemItemSimilarity(verbose=True)
+            self.getItemItemSimilarity(verbose=verbose)
             return
 
         self.item_item_similarity = {}
