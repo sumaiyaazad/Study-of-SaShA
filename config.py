@@ -3,17 +3,17 @@ SEED = 2023
 DATADIR = './data/'
 
 # done 
-DATASETS = ['yahoo_movies']
+DATASETS = ['SmallLibraryThing']
 # DATASETS = ['yahoo_movies', 'SmallLibraryThing']
 OUTDIR = './output/'
 
 # done average
 ATTACKS_BASE = []
 # ATTACKS_BASE = ['average']
-# ATTACKS_BASE = ['random', 'average']
+ATTACKS_BASE = ['random', 'average']
 ATTACKS_SEMANTIC = []
-ATTACKS_SEMANTIC = ['sasha_segment']
-# ATTACKS_SEMANTIC = ['sasha_random', 'sasha_average', 'sasha_segment']
+# ATTACKS_SEMANTIC = ['sasha_segment']
+ATTACKS_SEMANTIC = ['sasha_random', 'sasha_average', 'sasha_segment']
 ATTACKS = ATTACKS_BASE + ATTACKS_SEMANTIC
 
 # done 
@@ -34,7 +34,7 @@ ATTACK_SIZE_PERCENTAGE = 0.05    # 5% of the target user/item ratings will be at
 ATTACK_SIZES = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07] # 1%, 2%, 3%, 4%, 5% of the target user/item ratings will be attacked
 FILLER_SIZES = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4]       # 0.5, 1, 1.5, 2, 2.5, 3 times of the average number of ratings per user
 
-SKIP_BREAKS = [9, 10]
+SKIP_BREAKS = [10]
 
 
 NUM_TARGET_ITEMS = 50
