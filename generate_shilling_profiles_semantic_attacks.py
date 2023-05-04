@@ -5,6 +5,7 @@ from attacks.sasha_average import *
 from attacks.sasha_segment import *
 from utils.notification import *
 from utils.misc import *
+from utils.sendmail import *
 import config as cfg
 import argparse
 
@@ -27,6 +28,15 @@ def main():
     print('Attack: {}'.format(args.attack))
     print()
 
+
+    # output = OUTDIR + 'attack_name_dataset_target_item_id.csv'
+    output = OUTDIR + 'shilling_profiles/{0}_{1}_{2}.csv'.format(args.attack, args.dataset, args.target_id)
+
+    # create directory if it doesn't exist
+    if not os.path.exists(OUTDIR + 'shilling_profiles/'):
+        os.makedirs(OUTDIR + 'shilling_profiles/')
+
+        
     (r_min, r_max) = RATING_RANGE[args.dataset]
     similarity_filelocation = 'output/shilling_profiles/' + args.similarity_filelocation
     item_feature_matrix = get_item_feature_matrix(kg, item_data, features)
@@ -64,17 +74,11 @@ def main():
     else:
         raise ValueError('Attack not found.')
 
-    # output = OUTDIR + 'attack_name_dataset_target_item_id.csv'
-    output = OUTDIR + 'shilling_profiles/{0}_{1}_{2}.csv'.format(args.attack, args.dataset, args.target_id)
-
-    # create directory if it doesn't exist
-    if not os.path.exists(OUTDIR + 'shilling_profiles/'):
-        os.makedirs(OUTDIR + 'shilling_profiles/')
-
     # generate shilling profiles
     attack_generator.generate_profile([args.target_id], 0.25, output, verbose=args.verbose)
 
     print()
+    sendmail('SAShA Detection test mail on new machine', 'shilling profiles generation done.\n{0}\n{1}\n{2}'.format(args.attack, args.dataset, args.target_id))  
     print('Experiment completed.')
     balloon_tip('SAShA Detection', 'shilling profiles generation done.\n{0}\n{1}\n{2}'.format(args.attack, args.dataset, args.target_id))
 
