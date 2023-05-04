@@ -738,7 +738,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                     hit_ratio_dir = currentdir + rs_model + '/results/' + 'hit_ratio/'
                     os.makedirs(hit_ratio_dir, exist_ok=True)
 
-                    print('Calculating hit ratio of post-attack recommendations for {} with {} similarity for dataset {}'.format(rs_model, similarity, dataset))
+                    # print('Calculating hit ratio of post-attack recommendations for {} with {} similarity for dataset {}'.format(rs_model, similarity, dataset))
                     if args.log:
                         log.append('Calculating hit ratio of post-attack recommendations for {} with {} similarity for dataset {}'.format(rs_model, similarity, dataset))
 
@@ -750,8 +750,11 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                     # for every attack, attack size and filler size, calculate hit ratio 
                     # concatenate in one dataframe and save to csv
                     
-                    
-                    hit_ratios = pd.DataFrame(columns = ['attack', 'attack_size', 'filler_size', 'hit_ratio'])
+                    hit_ratio_filename = hit_ratio_dir + 'post_attack_{}_hit_ratio.csv'.format(similarity)
+                    try:
+                        hit_ratios = pd.read_csv(hit_ratio_filename)
+                    except:
+                        hit_ratios = pd.DataFrame(columns = ['attack', 'attack_size', 'filler_size', 'hit_ratio'])
 
                     for attack in ATTACKS:
                         for attack_size in ATTACK_SIZES:
@@ -773,7 +776,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                                 breakpoint_pbar.update(1)
 
 
-                    hit_ratio_filename = hit_ratio_dir + 'post_attack_{}_hit_ratio.csv'.format(similarity)
+                    # hit_ratio_filename = hit_ratio_dir + 'post_attack_{}_hit_ratio.csv'.format(similarity)
                     hit_ratios.to_csv(hit_ratio_filename, index=False)
 
                     if args.log:
@@ -796,19 +799,20 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                         # filter hit ratios for current attack
                         attack_hit_ratio = attack_size_hit_ratios[attack_size_hit_ratios['attack'] == attack]
 
+                        plt.plot([], [], ' ', label='{} similarity'.format(similarity))
+                        plt.plot([], [], ' ', label='filler size {}'.format(FILLER_SIZE_PERCENTAGE))
                         for top_n in TOP_Ns:
                             # filter hit ratios for current top_n
                             current_hit_ratios_for_topn = attack_hit_ratio[attack_hit_ratio['among_first'] == top_n]  # top_n is  among_first
                             plt.plot(ATTACK_SIZES, current_hit_ratios_for_topn['hit_ratio'].to_list(), label='top {}'.format(top_n))
 
-                        plt.plot([], [], ' ', label='{} similarity'.format(similarity))
-                        plt.plot([], [], ' ', label='filler size {}'.format(FILLER_SIZE_PERCENTAGE))
-                        plt.axis('tight')
                         plt.legend(loc="upper left", bbox_to_anchor=(1.05,1))
-                        plt.title('hit ratio vs {} attack size'.format(attack))
+                        plt.axis('tight')
+                        plt.title('{} attack'.format(attack))
+                        plt.suptitle('hit ratio vs attack size')
                         plt.xlabel('Attack size')
                         plt.ylabel('Hit ratio')
-                        plt.savefig(graph_filename)
+                        plt.savefig(graph_filename, bbox_inches='tight')
                         plt.clf()
 
 
@@ -821,20 +825,23 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 
                         # filter hit ratios for current attack
                         current_hit_ratios = filler_hit_ratios[filler_hit_ratios['attack'] == attack]
-
+                        
+                        plt.plot([], [], ' ', label='{} similarity'.format(similarity))
+                        plt.plot([], [], ' ', label='attack size {}'.format(ATTACK_SIZE_PERCENTAGE))
+                        
                         for top_n in TOP_Ns:
                             # filter hit ratios for current top_n
                             current_hit_ratios_for_topn = current_hit_ratios[current_hit_ratios['among_first'] == top_n]  # top_n is  among_first
 
                             plt.plot(FILLER_SIZES, current_hit_ratios_for_topn['hit_ratio'].to_list(), label='top {}'.format(top_n))
-                        plt.plot([], [], ' ', label='{} similarity'.format(similarity))
-                        plt.plot([], [], ' ', label='attack size {}'.format(ATTACK_SIZE_PERCENTAGE))
                         plt.axis('tight')
                         plt.legend(loc="upper left", bbox_to_anchor=(1.05,1))
-                        plt.title('hit ratio vs {} filler size'.format(attack))
+                        # plt.title('hit ratio vs {}  size'.format(attack))
+                        plt.title('{} attack'.format(attack))
+                        plt.suptitle('hit ratio vs filler size')
                         plt.xlabel('Filler size')
                         plt.ylabel('Hit ratio')
-                        plt.savefig(graph_filename)
+                        plt.savefig(graph_filename, bbox_inches='tight')
                         plt.clf()
 
         if args.send_mail:
@@ -889,7 +896,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                     plt.title('Hit ratio vs top_n, {} attack size, {} filler size'.format(ATTACK_SIZE_PERCENTAGE, FILLER_SIZE_PERCENTAGE))
                     plt.xlabel('Top_n')
                     plt.ylabel('Hit ratio')
-                    plt.savefig(graph_filename)
+                    plt.savefig(graph_filename, bbox_inches='tight')
                     plt.clf()
 
         BREAKPOINT = 9

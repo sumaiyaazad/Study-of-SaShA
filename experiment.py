@@ -888,14 +888,15 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 
                         # filter hit ratios for current attack
                         current_hit_ratios = filler_hit_ratios[filler_hit_ratios['attack'] == attack]
-
+                        
+                        plt.plot([], [], ' ', label='{} similarity'.format(similarity))
+                        plt.plot([], [], ' ', label='attack size {}'.format(ATTACK_SIZE_PERCENTAGE))
+                        
                         for top_n in TOP_Ns:
                             # filter hit ratios for current top_n
                             current_hit_ratios_for_topn = current_hit_ratios[current_hit_ratios['among_first'] == top_n]  # top_n is  among_first
 
                             plt.plot(FILLER_SIZES, current_hit_ratios_for_topn['hit_ratio'].to_list(), label='top {}'.format(top_n))
-                        plt.plot([], [], ' ', label='{} similarity'.format(similarity))
-                        plt.plot([], [], ' ', label='attack size {}'.format(ATTACK_SIZE_PERCENTAGE))
                         plt.axis('tight')
                         plt.legend(loc="upper left", bbox_to_anchor=(1.05,1))
                         # plt.title('hit ratio vs {}  size'.format(attack))

@@ -47,7 +47,7 @@ RATING_RANGE = {
 }
 
 LOG_FILE = 'log.txt'
-EXP_NO = 20
+EXP_NO = 19
 
 # ----------------------------------------------- send mail -----------------------------------------------
 # SUBJECT = 'SAShA detection'
