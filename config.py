@@ -35,7 +35,7 @@ ATTACK_SIZES = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07] # 1%, 2%, 3%, 4%, 5% o
 FILLER_SIZES = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4]       # 0.5, 1, 1.5, 2, 2.5, 3 times of the average number of ratings per user
 
 # skip post attack hit ratio for now
-SKIP_BREAKS = []
+SKIP_BREAKS = [3, 4, 5, 6, 7, 8, 9, 10] # skip the first 3, 4, 5, 6, 7, 8, 9, 10 breaks
 
 
 NUM_TARGET_ITEMS = 10
@@ -48,7 +48,7 @@ RATING_RANGE = {
 }
 
 LOG_FILE = 'log.txt'
-EXP_NO = 0
+EXP_NO = 18
 
 # ----------------------------------------------- send mail -----------------------------------------------
 # SUBJECT = 'SAShA detection'

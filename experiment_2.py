@@ -920,10 +920,13 @@ def main():
 
     # experiment result directory
     
-    try:
-        next_version = np.array([int(name[len('experiment_results_'):]) for name in os.listdir(OUTDIR) if os.path.isdir(os.path.join(OUTDIR, name)) and name.startswith('experiment_results_')]).max() + 1
-    except ValueError:
-        next_version = 1
+    if EXP_NO == 0:
+        try:
+            next_version = np.array([int(name[len('experiment_results_'):]) for name in os.listdir(OUTDIR) if os.path.isdir(os.path.join(OUTDIR, name)) and name.startswith('experiment_results_')]).max() + 1
+        except ValueError:
+            next_version = 1
+    else:
+        next_version = EXP_NO
 
     BREAKPOINT = 0
     if args.breakpoint > 0 or args.version > 0:
