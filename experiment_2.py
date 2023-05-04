@@ -4,6 +4,7 @@ import os
 import matplotlib.pyplot as plt
 import shutil
 from tqdm import tqdm
+import datetime
 
 from config import *
 
@@ -1002,6 +1003,6 @@ if __name__ == '__main__':
 
     start_time = time.time()
     main()
-    print('Total time: ', time.time() - start_time)
+    print('Total time: ', str(datetime.timedelta(seconds=time.time() - start_time)))
 
 

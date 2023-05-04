@@ -3,21 +3,21 @@ SEED = 2023
 DATADIR = './data/'
 
 # done 
-# DATASETS = ['SmallLibraryThing']
-DATASETS = ['yahoo_movies', 'SmallLibraryThing']
+DATASETS = ['yahoo_movies']
+# DATASETS = ['yahoo_movies', 'SmallLibraryThing']
 OUTDIR = './output/'
 
 # done average
 # ATTACKS_BASE = []
-# ATTACKS_BASE = ['average']
-ATTACKS_BASE = ['random', 'average']
+ATTACKS_BASE = ['random']
+# ATTACKS_BASE = ['random', 'average']
 ATTACKS_SEMANTIC = []
 # ATTACKS_SEMANTIC = ['sasha_random']
-ATTACKS_SEMANTIC = ['sasha_random', 'sasha_average', 'sasha_segment']
+# ATTACKS_SEMANTIC = ['sasha_random', 'sasha_average', 'sasha_segment']
 ATTACKS = ATTACKS_BASE + ATTACKS_SEMANTIC
 
 # done 
-RS_MODELS = ['ubcf']
+RS_MODELS = ['ibcf']
 # RS_MODELS = ['mfcf', 'ibcf', 'ubcf']
 SIMILARITY_MEASURES = ['cosine']
 EVALUATIONS = ['hit_ratio', 'pred_shift']
@@ -34,11 +34,10 @@ ATTACK_SIZE_PERCENTAGE = 0.05    # 5% of the target user/item ratings will be at
 ATTACK_SIZES = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07] # 1%, 2%, 3%, 4%, 5% of the target user/item ratings will be attacked
 FILLER_SIZES = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4]       # 0.5, 1, 1.5, 2, 2.5, 3 times of the average number of ratings per user
 
-# skip post attack hit ratio for now
-SKIP_BREAKS = [3, 4, 5, 6, 7, 8, 9, 10] # skip the first 3, 4, 5, 6, 7, 8, 9, 10 breaks
+SKIP_BREAKS = [9, 10]
 
 
-NUM_TARGET_ITEMS = 10
+NUM_TARGET_ITEMS = 50
 
 RATING_RANGE = {
     'ml-1m': (1, 5),
@@ -48,7 +47,7 @@ RATING_RANGE = {
 }
 
 LOG_FILE = 'log.txt'
-EXP_NO = 18
+EXP_NO = 20
 
 # ----------------------------------------------- send mail -----------------------------------------------
 # SUBJECT = 'SAShA detection'
