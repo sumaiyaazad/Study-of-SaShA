@@ -138,6 +138,9 @@ https://drive.google.com/u/0/uc?id=1iKxaYhd_33yH0LtcZuO7Nf0yFcHFQXmI&export=down
                             post_attack_{similarity measure}_{attack size}_{filler size}_recommendations.csv    
                             post_attack_{similarity measure}_{attack size}_{filler size}_recommendations.csv
                             post_detection_{similarity measure}_{attack size}_{filler size}_{detection}_recommendations.csv
+                    detections
+                        {detector}
+                            {attack}_attack_{similarity measure}_{attack size}_{filler size}_detected_profiles.csv
                     graphs
                         {attack}_attack_size_vs_hit_ratio.png
                         {attack}_attack_size_vs_pred_shift.png

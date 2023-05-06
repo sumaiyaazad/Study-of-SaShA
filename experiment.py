@@ -27,6 +27,8 @@ from recommender_systems.memory_based.item_based_CF import ItemBasedCF
 from recommender_systems.memory_based.user_based_CF import UserBasedCF
 from recommender_systems.model_based.matrix_factorization_CF import MatrixFactorizationCF
 
+from detections.Number_Of_Predicton_Differences_Detector import PredictionDifferenceDetector
+
 from config import *
 
 
@@ -160,7 +162,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
             log.append('attack size: {}'.format(ATTACK_SIZES))
             log.append('filler size: {}'.format(FILLER_SIZES))
             log.append('attack impact evaluation metrics: {}'.format(EVALUATIONS))
-            log.append('detection: {}'.format(DETECTIONS))
+            log.append('detection: {}'.format(DETECTORS))
             log.append('experiment start time: {}'.format(now()))
             log.append('experiment result directory: {}'.format(dirname))
             log.append('Log file: {}'.format(LOG_FILE))
@@ -188,7 +190,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
             log.append('attack size: {}'.format(ATTACK_SIZES))
             log.append('filler size: {}'.format(FILLER_SIZES))
             log.append('attack impact evaluation metrics: {}'.format(EVALUATIONS))
-            log.append('detection: {}'.format(DETECTIONS))
+            log.append('detection: {}'.format(DETECTORS))
             log.append('experiment start time: {}'.format(now()))
             log.append('experiment result directory: {}'.format(dirname))
             log.append('Log file: {}'.format(LOG_FILE))
@@ -690,59 +692,6 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                                                         False)
                                 # diff altogether code end -----------------------------------------------------------------------------------------
 
-                                # diff seperate code start ---------------------------------------------------------------------------------------
-                                # for item in target_items:
-                                #     # fetch attack profiles for target item
-                                #     attack_dir = currentdir + 'attack_profiles/' + attack + '/'
-                                #     attack_profiles = pd.DataFrame()
-                                #     attack_profile = pd.read_csv(attack_dir + 'shilling_profiles_{}_{}_{}.csv'.format(attack_size, filler_size, item))
-                                #     attack_profiles = pd.concat([attack_profiles, attack_profile], ignore_index=True)
-                                #     attack_profiles = attack_profiles[['user_id', 'item_id', 'rating']]
-                                #     attack_profiles.columns = ['user_id', 'item_id', 'rating']
-
-                                #     # concat attack data with train data
-                                #     new_train_data = pd.concat([train_data, attack_profiles], ignore_index=True)
-                                    
-                                #     # concat attack users with train users
-                                #     temp = pd.DataFrame(attack_profiles.user_id.unique())
-                                #     temp.columns = ['user_id']
-                                #     new_train_users = train_users.copy()
-                                #     new_train_users = pd.concat([new_train_users, temp], ignore_index=True)
-
-                                #     # generate post-attack recommendations
-                                #     if args.log:
-                                #         log.append('Generating post-attack recommendations for dataset {}, similarity {}, rs_model {}, attack {}, attack size {} and filler size {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size))
-
-                                #     post_attack_dir = currentdir + 'post_attack_recommendations/' + similarity + '/' + rs_model + '/' + attack + '/'
-                                #     os.makedirs(post_attack_dir, exist_ok=True)
-                                    
-                                #     # similarity files directory and filenames defination
-                                #     similarity_dir = currentdir + 'similarities/' + 'post_attack/' + attack + '/'
-                                #     os.makedirs(similarity_dir, exist_ok=True)
-
-                                #     # recommendations directory and filenames defination
-                                #     recommendations_dir = currentdir + rs_model + '/recommendations/' + attack + '/'
-                                #     os.makedirs(recommendations_dir, exist_ok=True)
-                                #     recommendations_filename = recommendations_dir + 'post_attack_{}_{}_{}_{}_recommendations.csv'.format(similarity, attack_size, filler_size, item)
-
-
-                                #     # generate post-attack recommendations
-                                #     if args.log:
-                                #         log.append('Generating post-attack recommendations for dataset {}, similarity measure {}, recommender system {}, attack {}, attack size {}, filler size {}, item {}'.format(dataset, similarity, rs_model, attack, attack_size, filler_size, item))
-
-
-                                #     generateRecommendations((new_train_data, new_train_users, train_items),
-                                #                             rs_model,
-                                #                             similarity,
-                                #                             similarity_dir,
-                                #                             recommendations_filename,
-                                #                             log,
-                                #                             dataset,
-                                #                             attack_size,
-                                #                             filler_size,
-                                #                             False)
-                                # diff seperate code end -----------------------------------------------------------------------------------------
-                                    
                                 breakpoint_pbar.update(1)
 
 
@@ -921,7 +870,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 # so far, we have calculated hit ratio for post-attack recommendations
 # now, inter attack comparison
 
-    # (inter attack comparison) hit ratio vs top_n, fixed attack size, fixed filler size
+    # (inter attack comparison, hit ratio vs top_n, fixed attack size, fixed filler size)
     if BREAKPOINT < 9 and 9 in SKIP_BREAKS:
         BREAKPOINT = 9
         print('Skipping breakpoint {}'.format(BREAKPOINT))
@@ -969,8 +918,64 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
             log.append('BREAKPOINT 9')
             log.append('\n\n\n')
 
-# so far, inter attack comparison
+# so far, we did inter attack comparison
 # now, we will detect attacks profiles
+
+    # (detect attacks profiles)
+    if BREAKPOINT < 10 and 10 in SKIP_BREAKS:
+        BREAKPOINT = 10
+        print('Skipping breakpoint {}'.format(BREAKPOINT))
+        bigskip()
+        if args.log:
+            log.append('Skipping breakpoint {}'.format(BREAKPOINT))
+            log.append('\n\n\n')
+    if BREAKPOINT < 10:  # ----------------------------------------------------------------------------------- breakpoint 10
+        for dataset in DATASETS:
+            if dataset in all_currentdir.keys():
+                currentdir = all_currentdir[dataset]
+            else:
+                currentdir = dirname + dataset + '/'
+                all_currentdir[dataset] = currentdir
+            
+            for similarity in SIMILARITY_MEASURES:
+                for rs_model in RS_MODELS:
+                    recommendations_dir = currentdir + rs_model + '/recommendations/'
+
+                    for attack in ATTACKS:
+
+                        # read post-attack recommendations
+                        post_attack_recommendations_filename = recommendations_dir + attack + '/post_attack_{}_{}_{}_recommendations.csv'.format(similarity, ATTACK_SIZE_PERCENTAGE, FILLER_SIZE_PERCENTAGE)
+                        post_attack_recommendations = pd.read_csv(post_attack_recommendations_filename)
+
+                        # run detection algorithm
+                        for detector_algo in DETECTORS:
+                            if detector_algo == 'npd':
+                                detector = PredictionDifferenceDetector(post_attack_recommendations)
+                            # elif detector == 'pca':
+                            else:
+                                print('Detector {} not found'.format(detector_algo))
+                                if args.log:
+                                    log.append('Detector {} not found'.format(detector_algo))
+                                    log.abort()
+                                raise ValueError('Detector {} not found'.format(detector_algo))
+                            
+                            fake_profiles_filename = currentdir + rs_model + '/detections/' + detector_algo + '/{}_attack_{}_{}_{}_detected_profiles.csv'.format(attack, similarity, ATTACK_SIZE_PERCENTAGE, FILLER_SIZE_PERCENTAGE)
+
+                            # run detector
+                            detected_profiles = detector.predict_fake_profiles(fake_profiles_filename)
+
+                        # next breakpoint
+                        # # calculate detection accuracy
+                        # # save detection accuracy and graph
+
+        BREAKPOINT = 10
+        print('BREAKPOINT 10')
+        bigskip()
+        if args.log:
+            log.append('BREAKPOINT 10')
+            log.append('\n\n\n')
+
+# so far, we detected attacks
 # generate post-detection recommendations
 # calculate hit ratio for post-detection recommendations
 
@@ -994,7 +999,7 @@ def main():
     print('Similarity measure: ', SIMILARITY_MEASURES)
     print('Attack: ', ATTACKS)
     print('Attack impact evaluation metrics: ', EVALUATIONS)
-    print('Detection: ', DETECTIONS)
+    print('Detection: ', DETECTORS)
     print('Experiment start time: ', now())
 
     # experiment result directory

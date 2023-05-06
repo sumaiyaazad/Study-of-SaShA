@@ -2,26 +2,31 @@
 SEED = 2023
 DATADIR = './data/'
 
-# done 
-DATASETS = ['SmallLibraryThing']
+# datasets
+DATASETS = ['yahoo_movies']
 # DATASETS = ['yahoo_movies', 'SmallLibraryThing']
 OUTDIR = './output/'
 
-# done average
+# attacks
 ATTACKS_BASE = []
 # ATTACKS_BASE = ['average']
 ATTACKS_BASE = ['random', 'average']
 ATTACKS_SEMANTIC = []
-# ATTACKS_SEMANTIC = ['sasha_segment']
+ATTACKS_SEMANTIC = ['sasha_segment']
 ATTACKS_SEMANTIC = ['sasha_random', 'sasha_average', 'sasha_segment']
 ATTACKS = ATTACKS_BASE + ATTACKS_SEMANTIC
 
-# done 
-RS_MODELS = ['ibcf']
-# RS_MODELS = ['mfcf', 'ibcf', 'ubcf']
+# recommender systems
+RS_MODELS = ['ubcf']
+RS_MODELS = ['mfcf', 'ibcf', 'ubcf']
+
+# detectors
+DETECTORS = ['npd', 'pca']
+
+
 SIMILARITY_MEASURES = ['cosine']
 EVALUATIONS = ['hit_ratio', 'pred_shift']
-DETECTIONS = []
+
 TRAIN_SIZE = 0.8
 PUSH = True     # True: push the target user/item rating to the maximum rating, 
                 # False: push the target user/item rating to the minimum rating
@@ -29,15 +34,17 @@ TOP_N = 50      # top-N recommendation
 TOP_Ns = [10, 20, 30, 40, 50]   # top-N recommendation
 
 
-FILLER_SIZE_PERCENTAGE = 1       # fraction of average number of ratings per user
+FILLER_SIZE_PERCENTAGE = 2       # fraction of average number of ratings per user
 ATTACK_SIZE_PERCENTAGE = 0.05    # 5% of the target user/item ratings will be attacked
-ATTACK_SIZES = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07] # 1%, 2%, 3%, 4%, 5% of the target user/item ratings will be attacked
-FILLER_SIZES = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4]       # 0.5, 1, 1.5, 2, 2.5, 3 times of the average number of ratings per user
-
-SKIP_BREAKS = [10]
+ATTACK_SIZES = [0.01, 0.02, 0.03, 0.04, 0.05] # 1%, 2%, 3%, 4%, 5% of the target user/item ratings will be attacked
+FILLER_SIZES = [1, 1.5, 2, 2.5, 3]       # 0.5, 1, 1.5, 2, 2.5, 3 times of the average number of ratings per user
 
 
-NUM_TARGET_ITEMS = 50
+SKIP_BREAKS = []
+# SKIP_BREAKS = [8, 9]
+
+
+NUM_TARGET_ITEMS = 30
 
 RATING_RANGE = {
     'ml-1m': (1, 5),
@@ -55,7 +62,8 @@ BODY = 'Experiment done. sending a copy of the log file'
 
 # ----------------------------------------------- Data Loader -----------------------------------------------
 COLD_START_THRESHOLD = 5 # to avoid cold start drop users with less than 5 ratings and items with less than 5 ratings [ref: https://link.springer.com/chapter/10.1007/978-3-030-49461-2_18]
-SAMPLE_FRAC = 0.25 # randomly sample 25% of the data [ref: https://link.springer.com/chapter/10.1007/978-3-030-49461-2_18]
+SAMPLE_FRAC = 0.10 # randomly sample 25% of the data [ref: https://link.springer.com/chapter/10.1007/978-3-030-49461-2_18]
+# SAMPLE_FRAC = 0.25 # randomly sample 25% of the data [ref: https://link.springer.com/chapter/10.1007/978-3-030-49461-2_18]
 
 
 # ----------------------------------------------- RS models -----------------------------------------------
@@ -75,7 +83,8 @@ UKNN = 10
 # ----------------------------------------------- Attacks -----------------------------------------------
 from utils.similarity_measures import *
 KG_SIMILARITY = adjusted_cosine_similarity
-SAMPLE = 0.25 
+SAMPLE = 0.05 
+# SAMPLE = 0.25 
 # random: random attack
 # R_MAX = 5
 # R_MIN = 1
