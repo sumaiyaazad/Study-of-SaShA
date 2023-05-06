@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
 
 
 class PredictionDifferenceDetector:
@@ -47,9 +48,11 @@ class PredictionDifferenceDetector:
         :param fake_profile_filename: filename to save fake profiles and npd values
         """
         npd_values = pd.DataFrame(columns=['user_id', 'npd'])
-        for user_id in self.data['user_id'].unique():
+        for user_id in tqdm(self.data['user_id'].unique(), leave=False):
             npd = self.calculate_npd(user_id)
-            npd_values = npd_values.append({'user_id': user_id, 'npd': npd}, ignore_index=True)
+            # npd_values = npd_values.append({'user_id': user_id, 'npd': npd}, ignore_index=True)
+            npd_values.loc[len(npd_values)] = [user_id, npd]
+            # npd_values.concat([pd.DataFrame([[user_id, npd]], columns=['user_id', 'npd'])])
 
         npd_mean = npd_values['npd'].mean()
         npd_std = npd_values['npd'].std()

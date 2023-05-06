@@ -152,6 +152,7 @@ https://drive.google.com/u/0/uc?id=1iKxaYhd_33yH0LtcZuO7Nf0yFcHFQXmI&export=down
                             post_attack_{similarity measure}_hit_ratio.csv      > (among_first, hit_ratio, attack_size, filler_size, attack)
                             post_detection_{similarity measure}_hit_ratio.csv   > (among_first, hit_ratio, attack_size, filler_size, attack, detection)
                         pred_shift  > tbd
+                        detection_accuracy_{attack_size}_{filler_size}.csv  > (attack, detection, accuracy)
                 
 
 - Run the following command to run the experiments.

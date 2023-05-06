@@ -128,3 +128,57 @@ def new_hit_ratio(recommendations_filename, target_items, among_firsts, verbose=
     
 
     return hit_df
+
+def accuracy(recommendations_filename, target_items, verbose=False, log=None):
+    """
+    :param recommendations_filename: filename of the recommendations file
+    :param target_items: list of target items
+    :param verbose: print the hit ratio
+    :param log: log the hit ratio, object of the logger class
+
+    :return: pandas dataframe with the hit ratio for each among_first
+    """
+
+    if verbose:
+        print("Calculating accuracy...")
+        start = time.time()
+
+    if log is not None:
+        log.append("Starting accuracy calculation")
+
+    recommendations = pd.read_csv(recommendations_filename)
+    recommendations.columns = ['user_id', 'item_id', 'rating']
+    grouped = recommendations.groupby('user_id', group_keys=True).apply(lambda x: x.sort_values(['rating'], ascending=False))
+    grouped.drop('user_id', axis=1, inplace=True)
+
+    tot_users = recommendations.user_id.nunique()
+
+    all_hit_counts = grouped.groupby('user_id').head(1)['item_id'].value_counts()
+    filtered_target_items = [item for item in target_items if item in all_hit_counts.index]
+    hits = all_hit_counts[filtered_target_items].sum()
+    accuracy = hits / tot_users
+    
+    if verbose:
+        print("Accuracy: {0}".format(accuracy))
+        print("Time: {0}".format(time.time() - start))
+
+    if log is not None:
+        log.append("Accuracy calculation completed")
+    
+
+    return accuracy
+
+def shilling_profile_detection_accuracy(shilling_profiles, detected_profiles):
+    """
+    :param shilling_profiles: pandas df of shilling profiles
+    :param detected_profiles: pandas df of detected profiles
+
+    :return: accuracy of the detection
+    """
+
+    shilling_profiles = set(shilling_profiles['user_id'].unique().tolist())
+    detected_profiles = set(detected_profiles['user_id'].unique().tolist())
+
+    accuracy = len(shilling_profiles.intersection(detected_profiles)) / len(shilling_profiles)
+
+    return accuracy

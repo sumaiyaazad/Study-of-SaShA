@@ -930,6 +930,9 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
             log.append('Skipping breakpoint {}'.format(BREAKPOINT))
             log.append('\n\n\n')
     if BREAKPOINT < 10:  # ----------------------------------------------------------------------------------- breakpoint 10
+        
+        breakpoint_pbar = tqdm(total=len(DATASETS) * len(SIMILARITY_MEASURES) * len(RS_MODELS) * len(ATTACKS) * len(DETECTORS), desc='Breakpoint 10')
+        
         for dataset in DATASETS:
             if dataset in all_currentdir.keys():
                 currentdir = all_currentdir[dataset]
@@ -962,11 +965,9 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                             fake_profiles_filename = currentdir + rs_model + '/detections/' + detector_algo + '/{}_attack_{}_{}_{}_detected_profiles.csv'.format(attack, similarity, ATTACK_SIZE_PERCENTAGE, FILLER_SIZE_PERCENTAGE)
 
                             # run detector
-                            detected_profiles = detector.predict_fake_profiles(fake_profiles_filename)
+                            detector.predict_fake_profiles(fake_profiles_filename)
 
-                        # next breakpoint
-                        # # calculate detection accuracy
-                        # # save detection accuracy and graph
+                            breakpoint_pbar.update(1)
 
         BREAKPOINT = 10
         print('BREAKPOINT 10')
@@ -976,6 +977,80 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
             log.append('\n\n\n')
 
 # so far, we detected attacks
+# now we will evaluate detections
+
+    # (evaluate detections)
+    if BREAKPOINT < 11 and 11 in SKIP_BREAKS:
+        BREAKPOINT = 11
+        print('Skipping breakpoint {}'.format(BREAKPOINT))
+        bigskip()
+        if args.log:
+            log.append('Skipping breakpoint {}'.format(BREAKPOINT))
+            log.append('\n\n\n')
+    if BREAKPOINT < 11:  # ----------------------------------------------------------------------------------- breakpoint 11
+
+        breakpoint_pbar = tqdm(total=len(DATASETS) * len(SIMILARITY_MEASURES) * len(RS_MODELS) * len(ATTACKS) * len(DETECTORS), desc='Breakpoint 11')
+
+        for dataset in DATASETS:
+            if dataset in all_currentdir.keys():
+                currentdir = all_currentdir[dataset]
+            else:
+                currentdir = dirname + dataset + '/'
+                all_currentdir[dataset] = currentdir
+
+            accuracy_df = pd.DataFrame(columns=['attack', 'rec_sys', 'similarity', 'detector', 'accuracy'])
+            
+            for similarity in SIMILARITY_MEASURES:
+                
+                for attack in ATTACKS:
+
+                    # read attack profiles
+                    attack_dir = currentdir + 'attack_profiles/' + attack + '/'
+                    attack_profiles = pd.read_csv(attack_dir + 'shilling_profiles_{}_{}.csv'.format(ATTACK_SIZE_PERCENTAGE , FILLER_SIZE_PERCENTAGE))
+                    
+                    for rs_model in RS_MODELS:
+                        for detector_algo in DETECTORS:
+
+                            detected_attack_profiles_filename = currentdir + rs_model + '/detections/' + detector_algo + '/{}_attack_{}_{}_{}_detected_profiles.csv'.format(attack, similarity, ATTACK_SIZE_PERCENTAGE, FILLER_SIZE_PERCENTAGE)
+                            detected_attack_profiles = pd.read_csv(detected_attack_profiles_filename)
+
+                            # calculate detection accuracy
+                            accuracy = shilling_profile_detection_accuracy(attack_profiles, detected_attack_profiles)
+                            accuracy_df = accuracy_df.append({'attack': attack,
+                                                              'rec_sys': rs_model,
+                                                              'similarity': similarity, 
+                                                              'detector': detector_algo, 
+                                                              'accuracy': accuracy}, ignore_index=True)
+                            
+                            breakpoint_pbar.update(1)
+
+
+            # save detection accuracy graph
+            for rs_model in RS_MODELS:
+                accuracy_df_filename = currentdir + rs_model + '/results/detection_accuracy_{attack_size}_{filler_size}.csv'.format(attack_size=ATTACK_SIZE_PERCENTAGE, filler_size=FILLER_SIZE_PERCENTAGE)
+
+                accuracy_df[accuracy_df['rec_sys'] == rs_model].to_csv(accuracy_df_filename, index=False)
+
+                # plot detection accuracy graph
+                for similarity in SIMILARITY_MEASURES:
+                    graph_filename = currentdir + rs_model + '/graphs/detection_accuracy_{attack_size}_{filler_size}_{similarity}.png'.format(attack_size=ATTACK_SIZE_PERCENTAGE, filler_size=FILLER_SIZE_PERCENTAGE, similarity=similarity)
+
+                    plt.plot(accuracy_df[accuracy_df['rec_sys'] == rs_model][accuracy_df['similarity'] == similarity]['attack'], accuracy_df[accuracy_df['rec_sys'] == rs_model][accuracy_df['similarity'] == similarity]['accuracy'], marker='o')
+                    plt.xlabel('Attack')
+                    plt.ylabel('Detection accuracy')
+                    plt.savefig(graph_filename, bbox_inches='tight')
+                    plt.clf()
+
+        BREAKPOINT = 11
+        print('BREAKPOINT 11')
+        bigskip()
+        if args.log:
+            log.append('BREAKPOINT 11')
+            log.append('\n\n\n')
+
+
+
+
 # generate post-detection recommendations
 # calculate hit ratio for post-detection recommendations
 
