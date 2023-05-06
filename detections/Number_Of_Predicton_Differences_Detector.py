@@ -50,9 +50,7 @@ class PredictionDifferenceDetector:
         npd_values = pd.DataFrame(columns=['user_id', 'npd'])
         for user_id in tqdm(self.data['user_id'].unique(), leave=False):
             npd = self.calculate_npd(user_id)
-            # npd_values = npd_values.append({'user_id': user_id, 'npd': npd}, ignore_index=True)
             npd_values.loc[len(npd_values)] = [user_id, npd]
-            # npd_values.concat([pd.DataFrame([[user_id, npd]], columns=['user_id', 'npd'])])
 
         npd_mean = npd_values['npd'].mean()
         npd_std = npd_values['npd'].std()
@@ -62,18 +60,5 @@ class PredictionDifferenceDetector:
         # filter fake profiles
         fake_profiles = npd_values[npd_values['npd'] > threshold]
         npd_values.to_csv(fake_profiles_filename, index=False)
-
-
-        # npd_values = {user_id: self.calculate_npd(user_id) for user_id in self.data['user_id'].unique()}
-        # mean = np.mean(list(npd_values.values()))
-        # std = np.std(list(npd_values.values()))
-        # threshold = mean + 3 * std
-        # fake_profiles = [user_id for user_id, npd_value in npd_values.items() if npd_value > threshold]
-        # fake_profiles_values = {user_id: 1 if npd_value > threshold else 0 for user_id, npd_value in npd_values.items()}
-
-
-        # np.savetxt(npd_filename, np.array(list(npd_values.values())), fmt='%.2f')
-        # np.savetxt(fake_profile_filename, np.array(list(fake_profiles_values.values())), fmt='%.0f')
-        # np.savetxt(fake_profile_id, fake_profiles, fmt='%.0f')
 
         return fake_profiles
