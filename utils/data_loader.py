@@ -92,6 +92,19 @@ def load_data_dummy():
     return (data, users, items), None
 
 
+def load_data_dummy_ratings():
+    # Load ratings data
+    data = pd.read_csv('data/dummy/ratings.csv', header=None)
+    users = pd.read_csv('data/dummy/users.csv', header=None)
+    items = pd.read_csv('data/dummy/items.csv', header=None)
+
+    data.columns = ['user_id', 'item_id', 'rating']
+    users.columns = ['user_id']
+    items.columns = ['item_id']
+
+    return data, users, items
+
+
 def load_data_yahoo_movies(split=False):
 
     # Load ratings data
