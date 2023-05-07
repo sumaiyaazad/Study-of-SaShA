@@ -93,7 +93,6 @@ def load_data_dummy():
 
 
 def load_data_dummy_ratings():
-    # Load ratings data
     data = pd.read_csv('data/dummy/ratings.csv', header=None)
     users = pd.read_csv('data/dummy/users.csv', header=None)
     items = pd.read_csv('data/dummy/items.csv', header=None)
