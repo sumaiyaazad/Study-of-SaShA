@@ -27,8 +27,8 @@ class PredictionDifferenceDetector:
         item_means = data_calc.groupby('item_id')['rating'].mean()
         global_mean = data_calc['rating'].mean()
 
-        user_mean = user_means.loc[data_prediction['user_id']].values
-        item_mean = item_means.loc[data_prediction['item_id']].values
+        user_mean = user_means.loc[ data_prediction['user_id'] ].values
+        item_mean = item_means.loc[ data_prediction['item_id'] ].values
 
         prediction = global_mean + (user_mean - global_mean) + (item_mean - global_mean)
         return prediction
