@@ -4,7 +4,8 @@ from tqdm import tqdm
 
 
 class PredictionDifferenceDetector:
-    def __init__(self, data):
+    def __init__(self, data, constant):
+        self.constant = constant
         if isinstance(data, pd.DataFrame):
             self.data = data
         else:
@@ -23,25 +24,15 @@ class PredictionDifferenceDetector:
         return npd
 
     def make_predictions(self, data_calc, data_prediction):
-
-        # calculate user and item means
         user_means = data_calc.groupby('user_id')['rating'].mean()
         item_means = data_calc.groupby('item_id')['rating'].mean()
         global_mean = data_calc['rating'].mean()
 
-        # make predictions
-        predictions = []
+        user_mean = user_means.loc[data_prediction['user_id']].values
+        item_mean = item_means.loc[data_prediction['item_id']].values
 
-        for _, row in data_prediction.iterrows():
-            user_id = row['user_id']
-            item_id = row['item_id']
-
-            user_mean = user_means[user_id]
-            item_mean = item_means[item_id]
-
-            prediction = global_mean + (user_mean - global_mean) + (item_mean - global_mean)
-            predictions.append(prediction)
-        return predictions
+        prediction = global_mean + (user_mean - global_mean) + (item_mean - global_mean)
+        return prediction
 
     def predict_fake_profiles(self, fake_profiles_filename):
         """
@@ -55,7 +46,7 @@ class PredictionDifferenceDetector:
         npd_mean = npd_values['npd'].mean()
         npd_std = npd_values['npd'].std()
 
-        threshold = npd_mean + 3 * npd_std
+        threshold = npd_mean + self.constant * npd_std
 
         # filter fake profiles
         fake_profiles = npd_values[npd_values['npd'] > threshold]
