@@ -11,7 +11,7 @@ print("-------------------NPD Top Fake Profiles---------------------------------
 print(fake_profile_list)
 
 pca_predictor = PCAShillingAttackDetector(data, 10)
-print("------------------PCA Top Fake Profile--------------------------------------------")
+print("------------------PCA Top Fake Profiles--------------------------------------------")
 fake_profile_list = pca_predictor.predict_fake_profiles(fake_profile_file+"_pca.txt")
 print(fake_profile_list)
 
