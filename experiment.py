@@ -757,7 +757,8 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                         hit_ratios = pd.DataFrame(columns = ['attack', 'attack_size', 'filler_size', 'hit_ratio'])
 
                     for attack in ATTACKS:
-
+                        attack_dir = currentdir + 'attack_profiles/' + attack + '/'
+                        
                         if attack in hit_ratios['attack'].tolist():
                             breakpoint_pbar.update(len(ATTACK_SIZES) + len(FILLER_SIZES) - 1)
                             continue
@@ -775,10 +776,15 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                                 # diff seperate code start -----------------------------------------------------------------------------------------
                                 # post_attack_recommendations_filename = recommendations_dir + attack + '/post_attack_{}_{}_{}_{}_recommendations.csv'.format(similarity, attack_size, filler_size, {})
                                 # diff seperate code end -----------------------------------------------------------------------------------------
+
+                                # shilling users
+                                attack_profiles_filename = attack_dir + 'shilling_profiles_{}_{}.csv'.format(attack_size, filler_size)
+                                shilling_user_data = pd.read_csv(attack_profiles_filename)
                                 
                                 post_attack_hit_ratio = hit_ratio(recommendations_filename = post_attack_recommendations_filename,
                                                                 target_items = target_items,
                                                                 among_firsts=TOP_Ns,
+                                                                shilling_user_data=shilling_user_data,
                                                                 log = log)
                                 post_attack_hit_ratio['attack'] = attack
                                 post_attack_hit_ratio['attack_size'] = attack_size
@@ -824,7 +830,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                         plt.suptitle('hit ratio vs attack size')
                         plt.xlabel('Attack size')
                         plt.ylabel('Hit ratio')
-                        plt.savefig(graph_filename, bbox_inches='tight')
+                        plt.savefig(graph_filename, bbox_inches='tight', dpi=300)
                         plt.clf()
 
 
@@ -853,7 +859,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                         plt.suptitle('hit ratio vs filler size')
                         plt.xlabel('Filler size')
                         plt.ylabel('Hit ratio')
-                        plt.savefig(graph_filename, bbox_inches='tight')
+                        plt.savefig(graph_filename, bbox_inches='tight', dpi=300)
                         plt.clf()
 
         if args.send_mail:
@@ -908,7 +914,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                     plt.title('Hit ratio vs top_n, {} attack size, {} filler size'.format(ATTACK_SIZE_PERCENTAGE, FILLER_SIZE_PERCENTAGE))
                     plt.xlabel('Top_n')
                     plt.ylabel('Hit ratio')
-                    plt.savefig(graph_filename, bbox_inches='tight')
+                    plt.savefig(graph_filename, bbox_inches='tight', dpi=300)
                     plt.clf()
 
         BREAKPOINT = 9
@@ -962,7 +968,10 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                                     log.abort()
                                 raise ValueError('Detector {} not found'.format(detector_algo))
                             
-                            fake_profiles_filename = currentdir + rs_model + '/detections/' + detector_algo + '/{}_attack_{}_{}_{}_detected_profiles.csv'.format(attack, similarity, ATTACK_SIZE_PERCENTAGE, FILLER_SIZE_PERCENTAGE)
+                            detection_result_dir = currentdir + rs_model + '/detections/' + detector_algo + '/'
+                            os.makedirs(detection_result_dir, exist_ok=True)
+
+                            fake_profiles_filename = detection_result_dir + '{}_attack_{}_{}_{}_detected_profiles.csv'.format(attack, similarity, ATTACK_SIZE_PERCENTAGE, FILLER_SIZE_PERCENTAGE)
 
                             # run detector
                             detector.predict_fake_profiles(fake_profiles_filename)
@@ -1016,11 +1025,19 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 
                             # calculate detection accuracy
                             accuracy = shilling_profile_detection_accuracy(attack_profiles, detected_attack_profiles)
-                            accuracy_df = accuracy_df.append({'attack': attack,
-                                                              'rec_sys': rs_model,
-                                                              'similarity': similarity, 
-                                                              'detector': detector_algo, 
-                                                              'accuracy': accuracy}, ignore_index=True)
+                            # accuracy_df = accuracy_df.append({'attack': attack,
+                            #                                   'rec_sys': rs_model,
+                            #                                   'similarity': similarity, 
+                            #                                   'detector': detector_algo, 
+                            #                                   'accuracy': accuracy}, ignore_index=True)
+                            
+                            # do with concat
+                            accuracy_df = pd.concat([accuracy_df, pd.DataFrame({'attack': attack,
+                                                                              'rec_sys': rs_model,
+                                                                              'similarity': similarity,
+                                                                              'detector': detector_algo,
+                                                                              'accuracy': accuracy}, index=[0])], ignore_index=True)
+
                             
                             breakpoint_pbar.update(1)
 
@@ -1038,7 +1055,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                     plt.plot(accuracy_df[accuracy_df['rec_sys'] == rs_model][accuracy_df['similarity'] == similarity]['attack'], accuracy_df[accuracy_df['rec_sys'] == rs_model][accuracy_df['similarity'] == similarity]['accuracy'], marker='o')
                     plt.xlabel('Attack')
                     plt.ylabel('Detection accuracy')
-                    plt.savefig(graph_filename, bbox_inches='tight')
+                    plt.savefig(graph_filename, bbox_inches='tight', dpi=300)
                     plt.clf()
 
         BREAKPOINT = 11

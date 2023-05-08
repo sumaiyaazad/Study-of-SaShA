@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 
 class PredictionDifferenceDetector:
-    def __init__(self, data, constant):
+    def __init__(self, data, constant=3):
         self.constant = constant
         if isinstance(data, pd.DataFrame):
             self.data = data
@@ -47,9 +47,10 @@ class PredictionDifferenceDetector:
         npd_std = npd_values['npd'].std()
 
         threshold = npd_mean + self.constant * npd_std
+        print('detected threshold: {0}'.format(threshold))
 
         # filter fake profiles
         fake_profiles = npd_values[npd_values['npd'] > threshold]
-        npd_values.to_csv(fake_profiles_filename, index=False)
+        fake_profiles.to_csv(fake_profiles_filename, index=False)
 
         return fake_profiles

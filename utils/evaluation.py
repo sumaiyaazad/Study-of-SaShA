@@ -37,7 +37,7 @@ def prediction_shift(test_data, verbose=False, log=False):
     return avg_prediction_shift
 
 # hit ratio
-def hit_ratio(recommendations_filename, target_items, among_firsts, verbose=False, log=None):
+def hit_ratio(recommendations_filename, target_items, among_firsts, shilling_user_data=None, verbose=False, log=None):
     """
     :param recommendations_filename: filename of the recommendations file
     :param target_items: list of target items
@@ -56,6 +56,13 @@ def hit_ratio(recommendations_filename, target_items, among_firsts, verbose=Fals
 
     recommendations = pd.read_csv(recommendations_filename)
     recommendations.columns = ['user_id', 'item_id', 'rating']
+
+
+    if shilling_user_data is not None:
+        # remove shilling users from recommendations
+        recommendations = recommendations[~recommendations['user_id'].isin(shilling_user_data['user_id'].unique().tolist())]
+
+
     grouped = recommendations.groupby('user_id', group_keys=True).apply(lambda x: x.sort_values(['rating'], ascending=False))
     grouped.drop('user_id', axis=1, inplace=True)
 
