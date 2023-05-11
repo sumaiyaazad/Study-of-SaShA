@@ -28,6 +28,7 @@ from recommender_systems.memory_based.user_based_CF import UserBasedCF
 from recommender_systems.model_based.matrix_factorization_CF import MatrixFactorizationCF
 
 from detections.Number_Of_Predicton_Differences_Detector import PredictionDifferenceDetector
+from detections.PCA_Detector import PCAShillingAttackDetector
 
 from config import *
 
@@ -960,7 +961,8 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                         for detector_algo in DETECTORS:
                             if detector_algo == 'npd':
                                 detector = PredictionDifferenceDetector(post_attack_recommendations)
-                            # elif detector == 'pca':
+                            elif detector == 'pca':
+                                detector = PCAShillingAttackDetector(post_attack_recommendations)
                             else:
                                 print('Detector {} not found'.format(detector_algo))
                                 if args.log:
