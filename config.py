@@ -9,11 +9,11 @@ OUTDIR = './output/'
 
 # done average
 ATTACKS_BASE = []
-ATTACKS_BASE = ['random']
-# ATTACKS_BASE = ['random', 'average']
+# ATTACKS_BASE = ['random']
+ATTACKS_BASE = ['random', 'average']
 ATTACKS_SEMANTIC = []
 # ATTACKS_SEMANTIC = ['sasha_average']
-# ATTACKS_SEMANTIC = ['sasha_random', 'sasha_average', 'sasha_segment']
+ATTACKS_SEMANTIC = ['sasha_random', 'sasha_average', 'sasha_segment']
 ATTACKS = ATTACKS_BASE + ATTACKS_SEMANTIC
 
 # done 
@@ -34,7 +34,7 @@ ATTACK_SIZE_PERCENTAGE = 0.05    # 5% of the target user/item ratings will be at
 ATTACK_SIZES = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07] # 1%, 2%, 3%, 4%, 5% of the target user/item ratings will be attacked
 FILLER_SIZES = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4]       # 0.5, 1, 1.5, 2, 2.5, 3 times of the average number of ratings per user
 
-SKIP_BREAKS = [11]
+SKIP_BREAKS = []
 # SKIP_BREAKS = [9]
 
 
@@ -48,7 +48,7 @@ RATING_RANGE = {
 }
 
 LOG_FILE = 'log.txt'
-EXP_NO = 20
+EXP_NO = 20.1
 
 # ----------------------------------------------- send mail -----------------------------------------------
 # SUBJECT = 'SAShA detection'
