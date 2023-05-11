@@ -961,7 +961,7 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                         for detector_algo in DETECTORS:
                             if detector_algo == 'npd':
                                 detector = PredictionDifferenceDetector(post_attack_recommendations)
-                            elif detector == 'pca':
+                            elif detector_algo == 'pca':
                                 detector = PCAShillingAttackDetector(post_attack_recommendations)
                             else:
                                 print('Detector {} not found'.format(detector_algo))
