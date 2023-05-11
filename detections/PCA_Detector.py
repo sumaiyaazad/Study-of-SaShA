@@ -38,7 +38,6 @@ class PCAShillingAttackDetector:
         abs_projected_matrix = np.abs(projected_matrix)
         user_projected_matrix = {'user_id': self.data['user_id'].unique(), 'abs_value': abs_projected_matrix}
         user_projected_value = pd.DataFrame(user_projected_matrix)
-        user_projected_value.to_csv(fake_profiles_filename, index=False)
 
         # Find the users with the largest absolute values in the projected matrix
         # These users are potential shilling attackers
@@ -46,4 +45,7 @@ class PCAShillingAttackDetector:
         # shilling_attackers = np.argsort(np.abs(projected_matrix))[-self.n_components:]
         shilling_attackers = user_projected_value.sort_values(by='abs_value', ascending=False)
         shilling_attackers = shilling_attackers.head(self.n_components).sort_values(by='user_id')
+
+        shilling_attackers.to_csv(fake_profiles_filename, index=False)
+
         return shilling_attackers
