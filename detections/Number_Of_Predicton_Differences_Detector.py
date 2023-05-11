@@ -51,7 +51,7 @@ class PredictionDifferenceDetector:
         print('detected threshold: {0}'.format(threshold))
 
         # filter fake profiles
-        fake_profiles = npd_values[npd_values['npd'] > threshold]
+        fake_profiles = npd_values[npd_values['npd_value'] > threshold]
         fake_profiles.to_csv(fake_profiles_filename, index=False)
 
         return fake_profiles
