@@ -962,7 +962,9 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
                             if detector_algo == 'npd':
                                 detector = PredictionDifferenceDetector(post_attack_recommendations)
                             elif detector_algo == 'pca':
-                                detector = PCAShillingAttackDetector(post_attack_recommendations)
+                                nusers = post_attack_recommendations['user_id'].nunique()
+                                detector = PCAShillingAttackDetector(post_attack_recommendations, 
+                                                                     n_profiles=int(nusers*(ATTACK_SIZE_PERCENTAGE/(1+ATTACK_SIZE_PERCENTAGE))))
                             else:
                                 print('Detector {} not found'.format(detector_algo))
                                 if args.log:
@@ -1052,9 +1054,18 @@ def experiment(log, dirname, BREAKPOINT=0, SUBJECT="SAShA Detection"):
 
                 # plot detection accuracy graph
                 for similarity in SIMILARITY_MEASURES:
+                    # graph_filename = currentdir + rs_model + '/graphs/detection_accuracy_{attack_size}_{filler_size}_{similarity}.png'.format(attack_size=ATTACK_SIZE_PERCENTAGE, filler_size=FILLER_SIZE_PERCENTAGE, similarity=similarity)
+
+                    # plt.plot(accuracy_df[accuracy_df['rec_sys'] == rs_model][accuracy_df['similarity'] == similarity]['attack'], accuracy_df[accuracy_df['rec_sys'] == rs_model][accuracy_df['similarity'] == similarity]['accuracy'], marker='o')
+                    # plt.xlabel('Attack')
+                    # plt.ylabel('Detection accuracy')
+                    # plt.savefig(graph_filename, bbox_inches='tight', dpi=300)
+                    # plt.clf()
+
+                    # bar graph
                     graph_filename = currentdir + rs_model + '/graphs/detection_accuracy_{attack_size}_{filler_size}_{similarity}.png'.format(attack_size=ATTACK_SIZE_PERCENTAGE, filler_size=FILLER_SIZE_PERCENTAGE, similarity=similarity)
 
-                    plt.plot(accuracy_df[accuracy_df['rec_sys'] == rs_model][accuracy_df['similarity'] == similarity]['attack'], accuracy_df[accuracy_df['rec_sys'] == rs_model][accuracy_df['similarity'] == similarity]['accuracy'], marker='o')
+                    plt.bar(accuracy_df[accuracy_df['rec_sys'] == rs_model][accuracy_df['similarity'] == similarity]['attack'], accuracy_df[accuracy_df['rec_sys'] == rs_model][accuracy_df['similarity'] == similarity]['accuracy'])
                     plt.xlabel('Attack')
                     plt.ylabel('Detection accuracy')
                     plt.savefig(graph_filename, bbox_inches='tight', dpi=300)

@@ -21,7 +21,8 @@ ATTACKS = ATTACKS_BASE + ATTACKS_SEMANTIC
 RS_MODELS = ['mfcf', 'ibcf', 'ubcf']
 SIMILARITY_MEASURES = ['cosine']
 EVALUATIONS = ['hit_ratio', 'pred_shift']
-DETECTORS = ['npd', 'pca']
+DETECTORS = ['pca']
+# DETECTORS = ['npd', 'pca']
 TRAIN_SIZE = 0.8
 PUSH = True     # True: push the target user/item rating to the maximum rating, 
                 # False: push the target user/item rating to the minimum rating

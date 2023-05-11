@@ -4,9 +4,10 @@ from sklearn.decomposition import PCA
 
 
 class PCAShillingAttackDetector:
-    def __init__(self, data, n_components=10):
+    def __init__(self, data, n_profiles, n_components=10):
         self.data = data
         self.n_components = n_components
+        self.n_profiles = n_profiles
         self.user_item_matrix = self._construct_user_item_matrix()
 
     def _construct_user_item_matrix(self):
@@ -44,7 +45,9 @@ class PCAShillingAttackDetector:
         # you may choose the number of attackers
         # shilling_attackers = np.argsort(np.abs(projected_matrix))[-self.n_components:]
         shilling_attackers = user_projected_value.sort_values(by='abs_value', ascending=False)
-        shilling_attackers = shilling_attackers.head(self.n_components).sort_values(by='user_id')
+
+        shilling_attackers = shilling_attackers.head(self.n_profiles).sort_values(by='user_id')
+        # shilling_attackers = shilling_attackers.head(self.n_components).sort_values(by='user_id')
 
         shilling_attackers.to_csv(fake_profiles_filename, index=False)
 
