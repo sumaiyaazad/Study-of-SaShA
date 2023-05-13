@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 
 class PredictionDifferenceDetector:
-    def __init__(self, data, constant=3):
+    def __init__(self, data, constant=10):
         self.constant = constant
         if isinstance(data, pd.DataFrame):
             self.data = data
@@ -41,7 +41,6 @@ class PredictionDifferenceDetector:
         npd_values = pd.DataFrame(columns=['user_id', 'npd_value'])
         for user_id in tqdm(self.data['user_id'].unique(), leave=False):
             npd = self.calculate_npd(user_id)
-            # print(user_id)
             npd_values.loc[len(npd_values)] = [user_id, npd]
         npd_values['user_id'] = npd_values['user_id'].astype(int)
         npd_mean = npd_values['npd_value'].mean()

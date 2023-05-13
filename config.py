@@ -9,11 +9,11 @@ OUTDIR = './output/'
 
 # done average
 ATTACKS_BASE = []
-# ATTACKS_BASE = ['random']
-ATTACKS_BASE = ['random', 'average']
+ATTACKS_BASE = ['random']
+# ATTACKS_BASE = ['random', 'average']
 ATTACKS_SEMANTIC = []
 # ATTACKS_SEMANTIC = ['sasha_average']
-ATTACKS_SEMANTIC = ['sasha_random', 'sasha_average', 'sasha_segment']
+# ATTACKS_SEMANTIC = ['sasha_random', 'sasha_average', 'sasha_segment']
 ATTACKS = ATTACKS_BASE + ATTACKS_SEMANTIC
 
 # done 
@@ -21,7 +21,7 @@ ATTACKS = ATTACKS_BASE + ATTACKS_SEMANTIC
 RS_MODELS = ['mfcf', 'ibcf', 'ubcf']
 SIMILARITY_MEASURES = ['cosine']
 EVALUATIONS = ['hit_ratio', 'pred_shift']
-DETECTORS = ['pca']
+DETECTORS = ['npd']
 # DETECTORS = ['npd', 'pca']
 TRAIN_SIZE = 0.8
 PUSH = True     # True: push the target user/item rating to the maximum rating, 
